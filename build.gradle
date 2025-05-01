@@ -85,11 +85,17 @@ minecraft {
         client {
             // Comma-separated list of namespaces to load gametests from. Empty = all namespaces.
             property 'forge.enabledGameTestNamespaces', mod_id
+
+            property 'mixin.env.remapRefMap', 'true'
+            property 'mixin.env.refMapRemappingFile', "${projectDir}/build/createSrgToMcp/output.srg"
         }
 
         server {
             property 'forge.enabledGameTestNamespaces', mod_id
             args '--nogui'
+
+            property 'mixin.env.remapRefMap', 'true'
+            property 'mixin.env.refMapRemappingFile', "${projectDir}/build/createSrgToMcp/output.srg"
         }
 
         // This run config launches GameTestServer and runs all registered gametests, then exits.
@@ -128,6 +134,22 @@ repositories {
             includeGroup "curse.maven"
         }
     }
+
+    maven {
+        // Shedaniel's maven (Architectury API)
+        url = "https://maven.architectury.dev"
+        content {
+            includeGroup "dev.architectury"
+        }
+    }
+
+    maven {
+        // saps.dev Maven (KubeJS and Rhino)
+        url = "https://maven.saps.dev/minecraft"
+        content {
+            includeGroup "dev.latvian.mods"
+        }
+    }
 }
 
 dependencies {
@@ -157,6 +179,10 @@ dependencies {
     implementation fg.deobf("curse.maven:starter-kit-390717:6429851")
 
     implementation fg.deobf("curse.maven:lightmans-currency-472521:6419514")
+
+    implementation fg.deobf("dev.latvian.mods:kubejs-forge:2001.6.5-build.16")
+    implementation fg.deobf("dev.latvian.mods:rhino-forge:2001.2.3-build.10")
+    implementation fg.deobf("dev.architectury:architectury-forge:9.2.14")
 
     // Apply Mixin AP
     annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
