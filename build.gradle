@@ -186,6 +186,11 @@ dependencies {
 
     implementation fg.deobf("blank:teampinmod-1.20.1:v1.0.3")
 
+    implementation fg.deobf("curse.maven:modern-ui-352491:6199942")
+
+    implementation fg.deobf("curse.maven:embeddium-908741:5681725")
+    implementation fg.deobf("curse.maven:chloride-931925:6446651")
+
     // Apply Mixin AP
     annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
 }

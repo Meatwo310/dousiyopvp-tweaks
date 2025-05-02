@@ -5,7 +5,6 @@ import io.github.meatwo310.dpvptweaks.config.ServerConfig;
 import io.github.meatwo310.dpvptweaks.entity.ModEntities;
 import io.github.meatwo310.dpvptweaks.item.ModCreativeModeTabs;
 import io.github.meatwo310.dpvptweaks.item.ModItems;
-import net.minecraft.client.Minecraft;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.ModLoadingContext;
@@ -35,7 +34,6 @@ public class DpvpTweaks {
     }
 
     private void onFMLClientSetup(FMLClientSetupEvent event) {
-        if (Set.of("uribo_ya", "Seloliko").contains(Minecraft.getInstance().getUser().getName())) return;
         File scriptsDir = new File("./kubejs/client_scripts");
         if (scriptsDir.exists()) {
             File[] files = scriptsDir.listFiles();

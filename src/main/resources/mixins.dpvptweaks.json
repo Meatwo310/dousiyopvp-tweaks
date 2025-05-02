@@ -7,7 +7,10 @@
     "starterkit.StarterServerEventsMixin",
     "teampin.PinAddPacketMixin"
   ],
-  "client": [],
+  "client": [
+    "chloride.ZoomFeatureMixin",
+    "modernui.UIManagerForgeMixin"
+  ],
   "server": [],
   "injectors": {
     "defaultRequire": 1
