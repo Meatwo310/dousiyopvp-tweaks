@@ -24,6 +24,9 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.items.ItemHandlerHelper;
 
+import java.util.ArrayList;
+import java.util.stream.Collectors;
+
 @Mod.EventBusSubscriber
 public class DpvpTweaksCommand {
     public static final String KEY_INVALID_COIN = "commands.dpvptweaks.invalid_coin";
@@ -70,17 +73,70 @@ public class DpvpTweaksCommand {
                             ctx.getSource().sendSuccess(() -> Component.literal(message), false);
                             return Command.SINGLE_SUCCESS;
                         })
+                ).then(Commands.literal("mute")
+                        .requires(s -> s.hasPermission(2))
+                        .executes(DpvpTweaksCommand::listMuted)
+                        .then(Commands.argument("player", EntityArgument.player())
+                                .executes(DpvpTweaksCommand::mutePlayer))
+                ).then(Commands.literal("unmute")
+                        .requires(s -> s.hasPermission(2))
+                        .executes(DpvpTweaksCommand::listMuted)
+                        .then(Commands.argument("player", EntityArgument.player())
+                                .executes(DpvpTweaksCommand::unmutePlayer))
                 )
         );
     }
 
-    private static int givecoin(CommandContext<CommandSourceStack> commandSourceStackCommandContext) throws CommandSyntaxException {
-        var players = EntityArgument.getPlayers(commandSourceStackCommandContext, "players");
-        var coin = ItemArgument.getItem(commandSourceStackCommandContext, "coin");
+    private static int mutePlayer(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
+        String playerName = getPlayerName(ctx);
+        var muted = ServerConfig.mutedPlayersSet;
+        if (muted.contains(playerName)) {
+            ctx.getSource().sendSuccess(() -> Component.literal("プレイヤー " + playerName + " はすでにミュートされています"), true);
+            return Command.SINGLE_SUCCESS;
+        }
+        ArrayList<String> mutedNew = new ArrayList<>(muted);
+        mutedNew.add(playerName);
+        ServerConfig.MUTED_PLAYERS.set(mutedNew);
+        ctx.getSource().sendSuccess(() -> Component.literal("プレイヤー " + playerName + " をミュートしました"), true);
+        return Command.SINGLE_SUCCESS;
+    }
+
+    public static int unmutePlayer(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
+        String playerName = getPlayerName(ctx);
+        var muted = ServerConfig.mutedPlayersSet;
+        if (!muted.contains(playerName)) {
+            ctx.getSource().sendSuccess(() -> Component.literal("プレイヤー " + playerName + " はミュートされていません"), true);
+            return Command.SINGLE_SUCCESS;
+        }
+        ArrayList<String> mutedNew = new ArrayList<>(muted);
+        mutedNew.remove(playerName);
+        ServerConfig.MUTED_PLAYERS.set(mutedNew);
+        ctx.getSource().sendSuccess(() -> Component.literal("プレイヤー " + playerName + " のミュートを解除しました"), true);
+        return Command.SINGLE_SUCCESS;
+    }
+
+    public static int listMuted(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
+        var muted = ServerConfig.mutedPlayersSet;
+        if (muted.isEmpty()) {
+            ctx.getSource().sendSuccess(() -> Component.literal("ミュートされたプレイヤーは存在しません"), true);
+        } else {
+            String message = muted.stream().collect(Collectors.joining(", ", "ミュートされたプレイヤー: ", ""));
+            ctx.getSource().sendSuccess(() -> Component.literal(message), true);
+        }
+        return Command.SINGLE_SUCCESS;
+    }
+
+    private static String getPlayerName(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
+        return EntityArgument.getPlayer(ctx, "player").getName().getString();
+    }
+
+    private static int givecoin(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
+        var players = EntityArgument.getPlayers(ctx, "players");
+        var coin = ItemArgument.getItem(ctx, "coin");
 
         int amount;
         try {
-            amount = IntegerArgumentType.getInteger(commandSourceStackCommandContext, "amount");
+            amount = IntegerArgumentType.getInteger(ctx, "amount");
         } catch (IllegalArgumentException e) {
             amount = 1;
         }

@@ -2,7 +2,12 @@ package io.github.meatwo310.dpvptweaks.config;
 
 import io.github.meatwo310.dpvptweaks.DpvpTweaks;
 import net.minecraftforge.common.ForgeConfigSpec;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.event.config.ModConfigEvent;
+
+import java.util.List;
+import java.util.Set;
 
 @Mod.EventBusSubscriber(modid = DpvpTweaks.MODID, bus = Mod.EventBusSubscriber.Bus.MOD)
 public class ServerConfig {
@@ -11,6 +16,10 @@ public class ServerConfig {
     public static final ForgeConfigSpec.BooleanValue DISABLE_STARTER_KIT = BUILDER
             .comment("Disable the starter kit's welcome items.")
             .define("disableStarterKit", true);
+
+    public static final ForgeConfigSpec.ConfigValue<List<? extends String>> MUTED_PLAYERS = BUILDER
+            .comment("List of muted players. See: /dpvptweaks mute <player>")
+            .defineList("mutedPlayers", List.of(), o -> o instanceof String);
 
     private static final String COMMENT_DAMAGE = "The damage dealt by the %s";
     private static final String COMMENT_COOLDOWN = "The cooldown of the %s in ticks";
@@ -37,4 +46,11 @@ public class ServerConfig {
             .defineInRange("valine3g_cooldown", 20, 0, Integer.MAX_VALUE);
 
     public static final ForgeConfigSpec SPEC = BUILDER.build();
+
+    public static Set<String> mutedPlayersSet = Set.of();
+
+    @SubscribeEvent
+    static void onModConfig(ModConfigEvent event) {
+        mutedPlayersSet = Set.copyOf(MUTED_PLAYERS.get());
+    }
 }
