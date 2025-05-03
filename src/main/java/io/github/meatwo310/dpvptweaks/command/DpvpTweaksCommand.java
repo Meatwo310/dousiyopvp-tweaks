@@ -17,6 +17,7 @@ import net.minecraft.commands.Commands;
 import net.minecraft.commands.arguments.EntityArgument;
 import net.minecraft.commands.arguments.item.ItemArgument;
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.common.ForgeConfigSpec;
 import net.minecraftforge.event.RegisterCommandsEvent;
@@ -77,14 +78,29 @@ public class DpvpTweaksCommand {
                         .requires(s -> s.hasPermission(2))
                         .executes(DpvpTweaksCommand::listMuted)
                         .then(Commands.argument("player", EntityArgument.player())
-                                .executes(DpvpTweaksCommand::mutePlayer))
-                ).then(Commands.literal("unmute")
+                                .executes(DpvpTweaksCommand::mutePlayer)))
+                .then(Commands.literal("unmute")
                         .requires(s -> s.hasPermission(2))
                         .executes(DpvpTweaksCommand::listMuted)
                         .then(Commands.argument("player", EntityArgument.player())
-                                .executes(DpvpTweaksCommand::unmutePlayer))
-                )
+                                .executes(DpvpTweaksCommand::unmutePlayer)))
+                .then(Commands.literal("clearinventory")
+                        .requires(s -> s.hasPermission(2))
+                        .then(Commands.argument("players", EntityArgument.players())
+                                .executes(DpvpTweaksCommand::clearInventory)))
         );
+    }
+
+    private static int clearInventory(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
+        var players = EntityArgument.getPlayers(ctx, "players");
+        int playerSize = players.size();
+        for (ServerPlayer player : players) {
+            // Clear the player's inventory but keep the armor
+            player.getInventory().items.clear();
+            player.getInventory().offhand.clear();
+        }
+        ctx.getSource().sendSuccess(() -> Component.literal(playerSize + "人のプレイヤーのインベントリを空にしました"), true);
+        return playerSize;
     }
 
     private static int mutePlayer(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
