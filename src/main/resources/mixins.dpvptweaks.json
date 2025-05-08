@@ -4,6 +4,7 @@
   "package": "io.github.meatwo310.dpvptweaks.mixin",
   "compatibilityLevel": "JAVA_17",
   "mixins": [
+    "starterkit.GearFunctionsMixin",
     "starterkit.StarterServerEventsMixin",
     "teampin.PinAddPacketMixin"
   ],
