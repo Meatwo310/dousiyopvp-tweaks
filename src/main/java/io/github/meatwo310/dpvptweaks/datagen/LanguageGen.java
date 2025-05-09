@@ -1,7 +1,7 @@
 package io.github.meatwo310.dpvptweaks.datagen;
 
 import io.github.meatwo310.dpvptweaks.DpvpTweaks;
-import io.github.meatwo310.dpvptweaks.command.DpvpTweaksCommand;
+import io.github.meatwo310.dpvptweaks.command.DpvpTweaksGiveCoinCommand;
 import io.github.meatwo310.dpvptweaks.item.ModCreativeModeTabs;
 import io.github.meatwo310.dpvptweaks.item.ModItems;
 import net.minecraft.data.DataGenerator;
@@ -26,7 +26,7 @@ public class LanguageGen {
             add(ModItems.VALINE1G.get(), "Valine1g");
             add(ModItems.VALINE2G.get(), "Valine2g");
             add(ModItems.VALINE3G.get(), "Valine3g");
-            add(DpvpTweaksCommand.KEY_INVALID_COIN, "The item is not a coin");
+            add(DpvpTweaksGiveCoinCommand.KEY_INVALID_COIN, "The item is not a coin");
         }
     }
 
@@ -40,7 +40,7 @@ public class LanguageGen {
             add(ModItems.VALINE1G.get(), "バリン1g");
             add(ModItems.VALINE2G.get(), "バリン2g");
             add(ModItems.VALINE3G.get(), "バリン3g");
-            add(DpvpTweaksCommand.KEY_INVALID_COIN, "指定されたアイテムは硬貨ではありません");
+            add(DpvpTweaksGiveCoinCommand.KEY_INVALID_COIN, "指定されたアイテムは硬貨ではありません");
         }
     }
 }
