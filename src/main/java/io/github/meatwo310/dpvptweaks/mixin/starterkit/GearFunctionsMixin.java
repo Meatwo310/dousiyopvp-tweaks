@@ -10,7 +10,12 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 public class GearFunctionsMixin {
     @Redirect(
             method = "setPlayerGearFromGearString(Lnet/minecraft/world/entity/player/Player;Ljava/lang/String;Z)V",
-            at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/player/Inventory;clearContent()V")
+            at = @At(
+                    value = "INVOKE",
+                    target = "Lnet/minecraft/world/entity/player/Inventory;clearContent()V",
+                    remap = true
+            ),
+            remap = false
     )
     private static void onEmptiedInventory(Inventory inventory) {
         // Clear the inventory but keep the armor
