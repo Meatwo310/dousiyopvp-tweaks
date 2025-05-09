@@ -16,6 +16,10 @@ public class DpvpTweaksClearCommand {
                 .requires(s -> s.hasPermission(2))
                 .then(Commands.argument("players", EntityArgument.players())
                         .executes(DpvpTweaksClearCommand::clearInventory))
+        ).then(Commands.literal("cleararmor")
+                .requires(s -> s.hasPermission(2))
+                .then(Commands.argument("players", EntityArgument.players())
+                        .executes(DpvpTweaksClearCommand::clearArmor))
         );
     }
 
@@ -28,6 +32,17 @@ public class DpvpTweaksClearCommand {
             player.getInventory().offhand.clear();
         }
         ctx.getSource().sendSuccess(() -> Component.literal(playerSize + "人のプレイヤーのインベントリを空にしました"), true);
+        return playerSize;
+    }
+
+    private static int clearArmor(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
+        var players = EntityArgument.getPlayers(ctx, "players");
+        int playerSize = players.size();
+        for (ServerPlayer player : players) {
+            // Clear the player's armor
+            player.getInventory().armor.clear();
+        }
+        ctx.getSource().sendSuccess(() -> Component.literal(playerSize + "人のプレイヤーの防具スロットを空にしました"), true);
         return playerSize;
     }
 }
