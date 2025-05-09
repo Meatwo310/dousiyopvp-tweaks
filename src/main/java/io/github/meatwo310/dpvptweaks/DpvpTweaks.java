@@ -7,7 +7,6 @@ import io.github.meatwo310.dpvptweaks.item.ModCreativeModeTabs;
 import io.github.meatwo310.dpvptweaks.item.ModItems;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.ModList;
-import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
@@ -22,15 +21,15 @@ public class DpvpTweaks {
     public static final String MODID = "dpvptweaks";
     private static final Logger LOGGER = LogUtils.getLogger();
 
-    public DpvpTweaks() {
-        IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
+    public DpvpTweaks(FMLJavaModLoadingContext context) {
+        IEventBus modEventBus = context.getModEventBus();
         modEventBus.addListener(this::onFMLClientSetup);
 
         ModItems.register(modEventBus);
         ModCreativeModeTabs.register(modEventBus);
         ModEntities.register(modEventBus);
 
-        ModLoadingContext.get().registerConfig(ModConfig.Type.SERVER, ServerConfig.SPEC);
+        context.registerConfig(ModConfig.Type.SERVER, ServerConfig.SPEC);
     }
 
     private void onFMLClientSetup(FMLClientSetupEvent event) {
