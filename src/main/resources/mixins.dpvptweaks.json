@@ -10,7 +10,7 @@
     "teampin.PinAddPacketMixin"
   ],
   "client": [
-    "chloride.ZoomFeatureMixin",
+    "chloride.ZoomMixin",
     "modernui.UIManagerForgeMixin"
   ],
   "server": [],
