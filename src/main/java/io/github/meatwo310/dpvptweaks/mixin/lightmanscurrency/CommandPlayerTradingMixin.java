@@ -1,6 +1,5 @@
 package io.github.meatwo310.dpvptweaks.mixin.lightmanscurrency;
 
-import com.mojang.brigadier.Command;
 import com.mojang.brigadier.context.CommandContext;
 import io.github.lightman314.lightmanscurrency.common.commands.CommandPlayerTrading;
 import net.minecraft.commands.CommandSourceStack;
