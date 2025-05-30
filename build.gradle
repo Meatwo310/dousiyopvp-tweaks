@@ -206,9 +206,6 @@ mixin {
     // MixinGradle Settings
     add sourceSets.main, 'mixins.dpvptweaks.refmap.json'
     config 'mixins.dpvptweaks.json'
-
-    debug.verbose = true
-    debug.export = true
 }
 
 // This block of code expands all declared replace properties in the specified resource targets.
