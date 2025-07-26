@@ -28,6 +28,7 @@ public class DpvpTweaks {
     public static final Set<String> ALLOWED_MODS = Set.of(
             "appleskin",
             "architectury",
+            "ashvehicle",
             "athena",
             "badpackets",
             "betterf3",
@@ -53,6 +54,7 @@ public class DpvpTweaks {
             "elitex",
             "embeddium",
             "embeddium_extra",
+            "endlessammo",
             "entityculling",
             "extremesoundmuffler",
             "ferritecore",
@@ -72,7 +74,9 @@ public class DpvpTweaks {
             "kubejs",
             "lightmanscurrency",
             "lrarmor",
+            "lrtactical",
             "maxstuff",
+            "mcsp",
             "melody",
             "minecraft",
             "mixinextras",
@@ -116,27 +120,31 @@ public class DpvpTweaks {
             "teampinmod",
             "timestamp_chat",
             "toofast",
+            "transition",
+            "trender",
             "trenzalore",
             "tsukichat",
             "untranslateditems",
+            "vvp",
             "waterdripsound",
             "xlpackets",
             "yet_another_config_lib_v3"
     );
 
     public static final Set<String> DEVS = Set.of(
-            "uribo_ya",
-            "namaedousiyo",
+            "Dev",
+            "Meatwo310",
+            "Seloliko",
+            "TerreSR",
+            "ThunderAlpaca",
+            "Twister716",
             "kagamimoti_",
             "medakoro0321",
-            "TerreSR",
-            "Twister716",
-            "ThunderAlpaca",
+            "namaedosiyo",
+            "namaedousiyo",
             "tadanoguest",
-            "Seloliko",
-            "valine_3g",
-            "Dev",
-            "Meatwo310"
+            "uribo_ya",
+            "valine_3g"
     );
 
     public DpvpTweaks(FMLJavaModLoadingContext context) {
@@ -177,11 +185,19 @@ public class DpvpTweaks {
         var mods = ModList.get().getMods().stream()
                 .map(IModInfo::getModId)
                 .collect(Collectors.toCollection(HashSet::new));
-        if (bypass) LOGGER.info("Current mods: {}", mods);
+        if (bypass) LOGGER.info("Current mods: {}", mods.stream()
+                .sorted()
+                .map(mod -> "\"" + mod + "\"")
+                .toList()
+        );
         mods.removeAll(ALLOWED_MODS);
         if (!mods.isEmpty()) {
             if (bypass) {
-                LOGGER.warn("Following mods are not allowed: {}", mods);
+                LOGGER.warn("Following mods are not allowed: {}", mods.stream()
+                        .sorted()
+                        .map(mod -> "\"" + mod + "\"")
+                        .toList()
+                );
             } else {
                 Runtime.getRuntime().halt(-1);
             }
