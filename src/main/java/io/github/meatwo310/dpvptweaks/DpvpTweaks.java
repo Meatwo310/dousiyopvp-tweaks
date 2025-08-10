@@ -134,15 +134,7 @@ public class DpvpTweaks {
     public static final Set<String> DEVS = Set.of(
             "Dev",
             "Meatwo310",
-            "Seloliko",
-            "TerreSR",
-            "ThunderAlpaca",
-            "Twister716",
-            "kagamimoti_",
-            "medakoro0321",
             "namaedosiyo",
-            "namaedousiyo",
-            "tadanoguest",
             "uribo_ya",
             "valine_3g"
     );
