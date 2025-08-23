@@ -78,6 +78,7 @@ public class DpvpTweaks {
             "maxstuff",
             "mcsp",
             "melody",
+            "mildb",
             "minecraft",
             "mixinextras",
             "mixinsquared",
