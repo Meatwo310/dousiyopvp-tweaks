@@ -28,6 +28,7 @@ public class DpvpTweaks {
     public static final Set<String> ALLOWED_MODS = Set.of(
             "appleskin",
             "architectury",
+            "armourers_workshop",
             "ashvehicle",
             "athena",
             "badpackets",
@@ -118,6 +119,7 @@ public class DpvpTweaks {
             "supermartijn642corelib",
             "tacz",
             "tacztweaks",
+            "takkit",
             "teampinmod",
             "timestamp_chat",
             "toofast",
