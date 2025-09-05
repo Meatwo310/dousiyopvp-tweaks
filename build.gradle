@@ -182,6 +182,12 @@ dependencies {
     // http://www.gradle.org/docs/current/userguide/artifact_dependencies_tutorial.html
     // http://www.gradle.org/docs/current/userguide/dependency_management.html
 
+    runtimeOnly fg.deobf("curse.maven:catalogue-459701:4766090")
+    runtimeOnly fg.deobf("curse.maven:configured-457570:5180900")
+    runtimeOnly fg.deobf("curse.maven:jei-238222:6600311")
+    runtimeOnly fg.deobf("curse.maven:jei-integration-265917:4999754")
+    runtimeOnly fg.deobf("curse.maven:jade-324717:6855440")
+
     implementation fg.deobf("curse.maven:collective-342584:6429218")
     implementation fg.deobf("curse.maven:starter-kit-390717:6429851")
 
@@ -198,8 +204,15 @@ dependencies {
     implementation fg.deobf("curse.maven:embeddium-908741:5681725")
     implementation fg.deobf("curse.maven:chloride-931925:6504509")
 
+    implementation fg.deobf("curse.maven:curios-309927:6418456")
+
     // Apply Mixin AP
     annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
+
+    compileOnly(annotationProcessor("io.github.llamalad7:mixinextras-common:0.5.0"))
+    implementation(jarJar("io.github.llamalad7:mixinextras-forge:0.5.0")) {
+        jarJar.ranged(it, "[0.5.0,)")
+    }
 }
 
 mixin {
