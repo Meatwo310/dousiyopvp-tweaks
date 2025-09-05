@@ -50,8 +50,7 @@ public class ServerConfig {
                     Adjust how LC's wallets are rendered on clients.
                     DEFAULT: Unchanged behavior. Players can choose to show or hide their wallets.
                     ALWAYS: Always render wallets. Default.
-                    NEVER: Never render any wallets.
-                    """)
+                    NEVER: Never render any wallets.""")
             .defineEnum("walletsRenderMode", WalletsRenderMode.ALWAYS);
 
     public static final ForgeConfigSpec.BooleanValue CURIOS_IGNORE_RENDER_CHANGE = BUILDER
