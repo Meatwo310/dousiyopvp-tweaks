@@ -8,13 +8,11 @@ import io.github.meatwo310.dpvptweaks.config.WalletsRenderMode;
 import net.minecraft.client.model.EntityModel;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.world.entity.LivingEntity;
-import org.spongepowered.asm.mixin.Debug;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Debug(export = true)
 @Mixin(value = WalletLayer.class, remap = false)
 public class CuriosLayerMixin<T extends LivingEntity, M extends EntityModel<T>, E> {
     @Inject(
