@@ -45,6 +45,19 @@ public class ServerConfig {
             .comment(String.format(COMMENT_COOLDOWN, "valine3g"))
             .defineInRange("valine3g_cooldown", 20, 0, Integer.MAX_VALUE);
 
+    public static final ForgeConfigSpec.EnumValue<WalletsRenderMode> WALLETS_RENDER_MODE = BUILDER
+            .comment("""
+                    Adjust how LC's wallets are rendered on clients.
+                    DEFAULT: Unchanged behavior. Players can choose to show or hide their wallets.
+                    ALWAYS: Always render wallets. Default.
+                    NEVER: Never render any wallets.
+                    """)
+            .defineEnum("walletsRenderMode", WalletsRenderMode.ALWAYS);
+
+    public static final ForgeConfigSpec.BooleanValue CURIOS_IGNORE_RENDER_CHANGE = BUILDER
+            .comment("Ignore any packet from clients that request to show or hide their ANY curios.")
+            .define("curiosIgnoreRenderChange", false);
+
     public static final ForgeConfigSpec SPEC = BUILDER.build();
 
     public static Set<String> mutedPlayersSet = Set.of();
