@@ -13,6 +13,7 @@
     "teampin.PinAddPacketMixin"
   ],
   "client": [
+    "armourers_workshop.SkinOverriddenManagerMixin",
     "chloride.ZoomMixin",
     "curios.CuriosLayerMixin",
     "modernui.UIManagerForgeMixin"
