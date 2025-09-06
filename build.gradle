@@ -193,15 +193,15 @@ dependencies {
 
     implementation fg.deobf("curse.maven:lightmans-currency-472521:6524190")
 
-    implementation fg.deobf("dev.latvian.mods:kubejs-forge:2001.6.5-build.16")
-    implementation fg.deobf("dev.latvian.mods:rhino-forge:2001.2.3-build.10")
-    implementation fg.deobf("dev.architectury:architectury-forge:9.2.14")
+    runtimeOnly fg.deobf("dev.latvian.mods:kubejs-forge:2001.6.5-build.16")
+    runtimeOnly fg.deobf("dev.latvian.mods:rhino-forge:2001.2.3-build.10")
+    runtimeOnly fg.deobf("dev.architectury:architectury-forge:9.2.14")
 
     implementation fg.deobf("blank:teampinmod-1.20.1:v1.0.3")
 
     implementation fg.deobf("curse.maven:modern-ui-352491:6199942")
 
-    implementation fg.deobf("curse.maven:embeddium-908741:5681725")
+    runtimeOnly fg.deobf("curse.maven:embeddium-908741:5681725")
     implementation fg.deobf("curse.maven:chloride-931925:6504509")
 
     implementation fg.deobf("curse.maven:curios-309927:6418456")
