@@ -1,6 +1,7 @@
 package io.github.meatwo310.dpvptweaks;
 
 import com.mojang.logging.LogUtils;
+import io.github.meatwo310.dpvptweaks.config.CommonConfig;
 import io.github.meatwo310.dpvptweaks.config.ServerConfig;
 import io.github.meatwo310.dpvptweaks.entity.ModEntities;
 import io.github.meatwo310.dpvptweaks.item.ModCreativeModeTabs;
@@ -151,6 +152,7 @@ public class DpvpTweaks {
         ModEntities.register(modEventBus);
 
         context.registerConfig(ModConfig.Type.SERVER, ServerConfig.SPEC);
+        context.registerConfig(ModConfig.Type.COMMON, CommonConfig.SPEC);
     }
 
     private void onFMLClientSetup(FMLClientSetupEvent event) {

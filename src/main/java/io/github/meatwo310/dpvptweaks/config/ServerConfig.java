@@ -63,6 +63,9 @@ public class ServerConfig {
 
     @SubscribeEvent
     static void onModConfig(ModConfigEvent event) {
+        if (event.getConfig().getSpec() != SPEC) {
+            return;
+        }
         mutedPlayersSet = Set.copyOf(MUTED_PLAYERS.get());
     }
 }
