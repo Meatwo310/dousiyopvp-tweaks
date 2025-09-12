@@ -17,6 +17,7 @@ public class DpvpTweaksCommands {
         DpvpTweaksConfigCommand.register(builder, event);
         DpvpTweaksMuteCommand.register(builder, event);
         DpvpTweaksClearCommand.register(builder, event);
+        DpvpTweaksReportCommand.register(builder, event);
 
         event.getDispatcher().register(builder);
     }
