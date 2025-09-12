@@ -12,6 +12,7 @@ import java.util.function.Supplier;
 
 @Mixin(value = CPacketToggleRender.class, remap = false)
 public class CPacketToggleRenderMixin {
+    @SuppressWarnings("target")
     @Inject(
             method = "lambda$handle$3(Ljava/util/function/Supplier;Ltop/theillusivec4/curios/common/network/client/CPacketToggleRender;)V",
             at = @At("HEAD"),
