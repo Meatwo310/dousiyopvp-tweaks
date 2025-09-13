@@ -17,12 +17,9 @@ import net.minecraftforge.event.RegisterCommandsEvent;
 import org.slf4j.Logger;
 
 import java.time.Instant;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
 
 public class DpvpTweaksReportCommand {
     public static final Logger LOGGER = LogUtils.getLogger();
-    private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm:ss");
 
     static void register(LiteralArgumentBuilder<CommandSourceStack> builder, RegisterCommandsEvent event) {
         var dispatcher = event.getDispatcher();
@@ -58,7 +55,20 @@ public class DpvpTweaksReportCommand {
         );
         CommonConfig.addReport(report);
 
-        source.sendSuccess(() -> Component.literal(reported.getName() + " を通報しました: " + reason), true);
+        var msg = Component
+                .literal("プレイヤー §e%s§r を通報しました。ご協力ありがとうございます。".formatted(reported.getName()))
+                .withStyle(ChatFormatting.GREEN);
+        source.sendSuccess(() -> msg, false);
+
+        var broadcastMsg = Component.empty()
+                .append(Component.literal("[プレイヤー通報]\n").withStyle(ChatFormatting.RED))
+                .append(Component.literal(report.toStringWithoutTimestamp()));
+
+        var playerList = source.getServer().getPlayerList();
+        playerList.getPlayers().stream()
+                .filter(player -> playerList.isOp(player.getGameProfile()))
+                .forEach(player -> player.sendSystemMessage(broadcastMsg));
+
         return Command.SINGLE_SUCCESS;
     }
 
@@ -79,20 +89,7 @@ public class DpvpTweaksReportCommand {
         for (var json : reports) {
             try {
                 var report = new Gson().fromJson(json, Report.class);
-                var message = String.format("""
-                                [%s]
-                                §7通報者:§r §a%s§r §8(%s)§r
-                                §7通報対象:§r §c%s§r §8(%s)§r
-                                §7理由:§r %s""",
-                        Instant.ofEpochSecond(report.timestamp)
-                                .atZone(ZoneId.systemDefault())
-                                .format(FORMATTER),
-                        report.reporterName,
-                        report.reporterUUID,
-                        report.reportedName,
-                        report.reportedUUID,
-                        report.reason
-                );
+                var message = report.toString();
                 source.sendSuccess(() -> Component.literal(message), false);
             } catch (Exception e) {
                 LOGGER.error("Failed to parse report JSON: {}", json, e);
