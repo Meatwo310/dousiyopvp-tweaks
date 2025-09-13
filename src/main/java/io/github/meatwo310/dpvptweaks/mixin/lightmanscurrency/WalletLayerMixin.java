@@ -1,4 +1,4 @@
-package io.github.meatwo310.dpvptweaks.mixin.curios;
+package io.github.meatwo310.dpvptweaks.mixin.lightmanscurrency;
 
 import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import com.mojang.blaze3d.vertex.PoseStack;
@@ -14,7 +14,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(value = WalletLayer.class, remap = false)
-public class CuriosLayerMixin<T extends LivingEntity, M extends EntityModel<T>, E> {
+public class WalletLayerMixin<T extends LivingEntity, M extends EntityModel<T>, E> {
     @Inject(
             method = "render(Lcom/mojang/blaze3d/vertex/PoseStack;Lnet/minecraft/client/renderer/MultiBufferSource;ILnet/minecraft/world/entity/LivingEntity;FFFFFF)V",
             at = @At("HEAD"),
