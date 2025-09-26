@@ -10,6 +10,7 @@
     "minecraft.FunctionCommandMixin",
     "starterkit.GearFunctionsMixin",
     "starterkit.StarterServerEventsMixin",
+    "tacz.RenderHeadShotAABBMixin",
     "teampin.PinAddPacketMixin"
   ],
   "client": [
