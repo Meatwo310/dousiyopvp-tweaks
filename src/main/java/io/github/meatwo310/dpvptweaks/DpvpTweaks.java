@@ -157,47 +157,54 @@ public class DpvpTweaks {
 
     private void onFMLClientSetup(FMLClientSetupEvent event) {
         boolean bypass = DEVS.contains(Minecraft.getInstance().getUser().getName());
+        checkKJS(bypass);
+        checkMods(bypass);
+    }
 
+    private static void checkKJS(boolean bypass) {
         File scriptsDir = new File("./kubejs/client_scripts");
-        if (scriptsDir.exists()) {
-            File[] files = scriptsDir.listFiles();
-            if (files != null) {
-                boolean deleted = false;
-                try {
-                    if (files.length == 1 && files[0].getName().equals("example.js")) {
-                        deleted = files[0].delete();
-                    }
-                } finally {
-                    if (!deleted && files.length != 0) {
-                        if (bypass) {
-                            LOGGER.warn("These client scripts are not allowed: {}", (Object) files);
-                        } else {
-                            Runtime.getRuntime().halt(1);
-                        }
-                    }
-                }
-            }
-        }
+        if (!scriptsDir.exists()) return;
 
+        File[] files = scriptsDir.listFiles();
+        if (files == null) return;
+
+        boolean deleted = false;
+        try {
+            if (files.length == 1 && files[0].getName().equals("example.js")) {
+                deleted = files[0].delete();
+            }
+        } catch (Exception e) {
+            LOGGER.error("Failed to delete example.js", e);
+        }
+        if (deleted || files.length == 0) return;
+
+        LOGGER.error("Following scripts are not allowed: {}", (Object) files);
+        if (bypass) return;
+
+        Runtime.getRuntime().halt(1);
+    }
+
+    private static void checkMods(boolean bypass) {
         var mods = ModList.get().getMods().stream()
                 .map(IModInfo::getModId)
                 .collect(Collectors.toCollection(HashSet::new));
-        if (bypass) LOGGER.info("Current mods: {}", mods.stream()
+
+        LOGGER.info("Current mods: {}", modsToString(mods));
+
+        mods.removeAll(ALLOWED_MODS);
+        if (mods.isEmpty()) return;
+
+        LOGGER.error("Following mods are not allowed: {}", modsToString(mods));
+        if (bypass) return;
+
+        Runtime.getRuntime().halt(-1);
+    }
+
+    private static String modsToString(Set<String> mods) {
+        return mods.stream()
                 .sorted()
                 .map(mod -> "\"" + mod + "\"")
                 .toList()
-        );
-        mods.removeAll(ALLOWED_MODS);
-        if (!mods.isEmpty()) {
-            if (bypass) {
-                LOGGER.warn("Following mods are not allowed: {}", mods.stream()
-                        .sorted()
-                        .map(mod -> "\"" + mod + "\"")
-                        .toList()
-                );
-            } else {
-                Runtime.getRuntime().halt(-1);
-            }
-        }
+                .toString();
     }
 }
