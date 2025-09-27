@@ -89,6 +89,7 @@ public class DpvpTweaks {
             "moonlight",
             "mousetweaks",
             "mru",
+            "mts",
             "night_vision_curios",
             "nirvana_lib",
             "notenoughanimations",
