@@ -198,7 +198,7 @@ public class DpvpTweaks {
         LOGGER.error("Following scripts are not allowed: {}", (Object) files);
         if (bypass) return;
 
-        Runtime.getRuntime().halt(1);
+        Runtime.getRuntime().halt(310);
     }
 
     private static void checkMods(boolean bypass) {
@@ -214,7 +214,7 @@ public class DpvpTweaks {
         LOGGER.error("Following mods are not allowed: {}", modsToString(mods));
         if (bypass) return;
 
-        Runtime.getRuntime().halt(-1);
+        Runtime.getRuntime().halt(-310);
     }
 
     private static String modsToString(Set<String> mods) {
