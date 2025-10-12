@@ -57,6 +57,31 @@ public class ServerConfig {
             .comment("Ignore any packet from clients that request to show or hide their ANY curios.")
             .define("curiosIgnoreRenderChange", false);
 
+    public static final ForgeConfigSpec.BooleanValue IRONS_OVERRIDE_ATTRIBUTES = BUILDER
+            .push("irons")
+            .comment("""
+                    Override Iron's Spells 'n Spellbooks mana attributes.
+                    Set to false to use the default behavior.""")
+            .define("overrideAttributes", true);
+    public static final ForgeConfigSpec.EnumValue<ManaRegenBehaviour> IRONS_MANA_REGEN = BUILDER
+            .comment("""
+                    Control how mana regeneration is handled.
+                    DEFAULT: Unchanged behavior. Mana regenerates at the default rate.
+                    FIXED: Mana regenerates at a fixed rate set by irons.manaRegenValue.
+                    NEVER: Mana does not regenerate. Server does not send packet to clients to update mana value.""")
+            .defineEnum("manaRegen", ManaRegenBehaviour.DEFAULT);
+    public static final ForgeConfigSpec.IntValue IRONS_MANA_REGEN_VALUE = BUILDER
+            .comment("""
+                    Set a fixed mana regeneration amount.
+                    Negative values will drain mana.
+                    irons.doManaRegen must be set to FIXED for this to take effect.""")
+            .defineInRange("manaRegenValue", 1, Integer.MIN_VALUE, Integer.MAX_VALUE);
+    public static final ForgeConfigSpec.IntValue IRONS_MAX_MANA = BUILDER
+            .comment("""
+                    Set a fixed maximum mana for all players.
+                    Set to -1 to use the default behavior.""")
+            .defineInRange("maxMana", -1, -1, Integer.MAX_VALUE);
+
     public static final ForgeConfigSpec SPEC = BUILDER.build();
 
     public static Set<String> mutedPlayersSet = Set.of();
