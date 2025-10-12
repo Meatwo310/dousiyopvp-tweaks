@@ -63,24 +63,20 @@ public class ServerConfig {
                     Override Iron's Spells 'n Spellbooks mana attributes.
                     Set to false to use the default behavior.""")
             .define("overrideAttributes", true);
-    public static final ForgeConfigSpec.EnumValue<ManaRegenBehaviour> IRONS_MANA_REGEN = BUILDER
-            .comment("""
-                    Control how mana regeneration is handled.
-                    DEFAULT: Unchanged behavior. Mana regenerates at the default rate.
-                    FIXED: Mana regenerates at a fixed rate set by irons.manaRegenValue.
-                    NEVER: Mana does not regenerate. Server does not send packet to clients to update mana value.""")
-            .defineEnum("manaRegen", ManaRegenBehaviour.DEFAULT);
+    public static final ForgeConfigSpec.BooleanValue IRONS_OVERRIDE_MANA_REGEN = BUILDER
+            .comment("Whether to override mana regeneration behavior.")
+            .define("overrideManaRegen", true);
     public static final ForgeConfigSpec.IntValue IRONS_MANA_REGEN_VALUE = BUILDER
             .comment("""
                     Set a fixed mana regeneration amount.
                     Negative values will drain mana.
-                    irons.doManaRegen must be set to FIXED for this to take effect.""")
+                    irons.overrideManaRegen must be enabled for this to have an effect.""")
             .defineInRange("manaRegenValue", 1, Integer.MIN_VALUE, Integer.MAX_VALUE);
     public static final ForgeConfigSpec.IntValue IRONS_MAX_MANA = BUILDER
             .comment("""
                     Set a fixed maximum mana for all players.
                     Set to -1 to use the default behavior.""")
-            .defineInRange("maxMana", -1, -1, Integer.MAX_VALUE);
+            .defineInRange("maxMana", 100, -1, Integer.MAX_VALUE);
 
     public static final ForgeConfigSpec SPEC = BUILDER.build();
 
