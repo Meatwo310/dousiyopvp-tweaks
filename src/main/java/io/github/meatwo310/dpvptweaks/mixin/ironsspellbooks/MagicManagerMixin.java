@@ -12,7 +12,7 @@ public class MagicManagerMixin {
     private int modifyPlayerMaxMana(int playerMaxMana) {
         if (ServerConfig.IRONS_OVERRIDE_ATTRIBUTES.get()) {
             int maxMana = ServerConfig.IRONS_MAX_MANA.get();
-            if (maxMana > 0) {
+            if (maxMana >= 0) {
                 return maxMana;
             }
         }
