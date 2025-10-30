@@ -38,6 +38,7 @@ public class DpvpTweaks {
             "badpackets",
             "bettercombat",
             "betterf3",
+            "battleroyale",
             "caelus",
             "canary",
             "carvedpumpkins",
