@@ -48,10 +48,10 @@ public class DpvpTweaksGiveCoinCommand {
         }
 
         var coinStack = coin.createItemStack(amount, true);
-        if (!CoinAPI.API.IsAllowedInCoinContainer(coinStack, false)) throw INVALID_COIN.create();
+        if (!CoinAPI.getApi().IsAllowedInCoinContainer(coinStack, false)) throw INVALID_COIN.create();
 
         for (var player : players) {
-            ItemStack wallet = CoinAPI.API.getEquippedWallet(player);
+            ItemStack wallet = CoinAPI.getApi().getEquippedWallet(player);
             if (!wallet.isEmpty()) {
                 coinStack = WalletItem.PickupCoin(wallet, coinStack);
             }
