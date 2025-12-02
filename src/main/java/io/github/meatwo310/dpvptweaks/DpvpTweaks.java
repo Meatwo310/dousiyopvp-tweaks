@@ -59,6 +59,7 @@ public class DpvpTweaks {
             "db",
             "dpvptweaks",
             "dragonrise",
+            "dragonrise_reforge",
             "dummmmmmy",
             "dv",
             "ea",
