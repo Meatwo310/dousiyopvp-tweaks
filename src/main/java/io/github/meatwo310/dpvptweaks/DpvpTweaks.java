@@ -57,6 +57,7 @@ public class DpvpTweaks {
             "curios",
             "damageindicator",
             "db",
+            "dc",
             "dpvptweaks",
             "dragonrise",
             "dragonrise_reforge",
