@@ -1,9 +1,9 @@
 package com.dousiyo.dpvptweaks.client.sync;
 
 import com.dousiyo.dpvptweaks.DpvpTweaks;
-import com.dousiyo.dpvptweaks.network.ClientNetwork;
-import com.dousiyo.dpvptweaks.network.SessionSyncSeedPacket;
-import com.dousiyo.dpvptweaks.network.SessionSyncStatePacket;
+import com.dousiyo.dpvptweaks.network.RelayNetwork;
+import com.dousiyo.dpvptweaks.network.SessionSeedPacket;
+import com.dousiyo.dpvptweaks.network.SessionStatePacket;
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.event.TickEvent;
@@ -26,7 +26,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Mod.EventBusSubscriber(modid = DpvpTweaks.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
-public final class ClientSessionSyncManager {
+public final class ClientSessionStateManager {
     private static final long HEARTBEAT_INTERVAL_MS = 60_000L;
 
     private static String activeSessionId = "";
@@ -34,10 +34,10 @@ public final class ClientSessionSyncManager {
     private static long seedExpiresAtEpochMs = 0L;
     private static long nextHeartbeatAtEpochMs = 0L;
 
-    private ClientSessionSyncManager() {
+    private ClientSessionStateManager() {
     }
 
-    public static void onSessionSeed(SessionSyncSeedPacket seed) {
+    public static void onSessionSeed(SessionSeedPacket seed) {
         if (!FMLEnvironment.dist.isClient()) {
             return;
         }
@@ -94,7 +94,7 @@ public final class ClientSessionSyncManager {
         );
         String payloadDigest = sha256(digestSeed);
 
-        ClientNetwork.CHANNEL.sendToServer(new SessionSyncStatePacket(
+        RelayNetwork.CHANNEL.sendToServer(new SessionStatePacket(
                 stateType,
                 sessionId,
                 nonce,
@@ -172,7 +172,7 @@ public final class ClientSessionSyncManager {
         String username = mc.getUser() != null ? mc.getUser().getName() : "unknown";
         return String.join("|",
                 "mod=" + DpvpTweaks.MODID,
-                "channel=" + ClientNetwork.PROTOCOL_VERSION,
+                "channel=" + RelayNetwork.PROTOCOL_VERSION,
                 "user=" + username,
                 "java=" + System.getProperty("java.version", "unknown"),
                 "os=" + System.getProperty("os.name", "unknown"),
@@ -214,3 +214,4 @@ public final class ClientSessionSyncManager {
     private record ScriptScanResult(boolean allowed, String hashInput) {
     }
 }
+

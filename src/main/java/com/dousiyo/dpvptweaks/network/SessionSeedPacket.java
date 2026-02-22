@@ -1,19 +1,19 @@
 package com.dousiyo.dpvptweaks.network;
 
-import com.dousiyo.dpvptweaks.client.sync.ClientSessionSyncManager;
+import com.dousiyo.dpvptweaks.client.sync.ClientSessionStateManager;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.network.NetworkEvent;
 import net.minecraftforge.fml.loading.FMLEnvironment;
 
 import java.util.function.Supplier;
 
-public class SessionSyncSeedPacket {
+public class SessionSeedPacket {
     private final String sessionId;
     private final String nonce;
     private final long issuedAtEpochMs;
     private final long expiresAtEpochMs;
 
-    public SessionSyncSeedPacket(String sessionId, String nonce, long issuedAtEpochMs, long expiresAtEpochMs) {
+    public SessionSeedPacket(String sessionId, String nonce, long issuedAtEpochMs, long expiresAtEpochMs) {
         this.sessionId = sessionId;
         this.nonce = nonce;
         this.issuedAtEpochMs = issuedAtEpochMs;
@@ -36,15 +36,15 @@ public class SessionSyncSeedPacket {
         return expiresAtEpochMs;
     }
 
-    public static void encode(SessionSyncSeedPacket msg, FriendlyByteBuf buf) {
+    public static void encode(SessionSeedPacket msg, FriendlyByteBuf buf) {
         buf.writeUtf(msg.sessionId, 128);
         buf.writeUtf(msg.nonce, 256);
         buf.writeLong(msg.issuedAtEpochMs);
         buf.writeLong(msg.expiresAtEpochMs);
     }
 
-    public static SessionSyncSeedPacket decode(FriendlyByteBuf buf) {
-        return new SessionSyncSeedPacket(
+    public static SessionSeedPacket decode(FriendlyByteBuf buf) {
+        return new SessionSeedPacket(
                 buf.readUtf(128),
                 buf.readUtf(256),
                 buf.readLong(),
@@ -52,13 +52,14 @@ public class SessionSyncSeedPacket {
         );
     }
 
-    public static void handle(SessionSyncSeedPacket msg, Supplier<NetworkEvent.Context> ctx) {
+    public static void handle(SessionSeedPacket msg, Supplier<NetworkEvent.Context> ctx) {
         NetworkEvent.Context context = ctx.get();
         if (!context.getDirection().getReceptionSide().isClient() || !FMLEnvironment.dist.isClient()) {
             context.setPacketHandled(true);
             return;
         }
-        context.enqueueWork(() -> ClientSessionSyncManager.onSessionSeed(msg));
+        context.enqueueWork(() -> ClientSessionStateManager.onSessionSeed(msg));
         context.setPacketHandled(true);
     }
 }
+

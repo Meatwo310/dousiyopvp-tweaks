@@ -2,6 +2,7 @@ package com.dousiyo.dpvptweaks.command;
 
 import com.dousiyo.dpvptweaks.network.ClientNetwork;
 import com.dousiyo.dpvptweaks.network.OpenLoadoutGuiPacket;
+import com.dousiyo.dpvptweaks.network.OpenMiniLoadoutGuiPacket;
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
@@ -19,11 +20,17 @@ public class DpvpTweaksLoadoutCommand {
         builder.then(Commands.literal("loadout")
                 .requires(s -> s.hasPermission(2))
                 .then(Commands.argument("players", EntityArgument.players())
-                        .executes(DpvpTweaksLoadoutCommand::openLoadoutGui))
+                        .executes(DpvpTweaksLoadoutCommand::openTbLoadoutGui))
+                .then(Commands.literal("tb")
+                        .then(Commands.argument("players", EntityArgument.players())
+                                .executes(DpvpTweaksLoadoutCommand::openTbLoadoutGui)))
+                .then(Commands.literal("tb_mini")
+                        .then(Commands.argument("players", EntityArgument.players())
+                                .executes(DpvpTweaksLoadoutCommand::openTbMiniLoadoutGui)))
         );
     }
 
-    private static int openLoadoutGui(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
+    private static int openTbLoadoutGui(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
         var players = EntityArgument.getPlayers(ctx, "players");
         int count = 0;
         for (ServerPlayer player : players) {
@@ -32,8 +39,20 @@ public class DpvpTweaksLoadoutCommand {
         }
 
         int finalCount = count;
-        ctx.getSource().sendSuccess(() -> Component.literal(finalCount + " player(s) were asked to open loadout GUI."), true);
+        ctx.getSource().sendSuccess(() -> Component.literal(finalCount + " player(s) were asked to open tb loadout GUI."), true);
+        return count > 0 ? Command.SINGLE_SUCCESS : 0;
+    }
+
+    private static int openTbMiniLoadoutGui(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
+        var players = EntityArgument.getPlayers(ctx, "players");
+        int count = 0;
+        for (ServerPlayer player : players) {
+            ClientNetwork.CHANNEL.send(PacketDistributor.PLAYER.with(() -> player), new OpenMiniLoadoutGuiPacket());
+            count++;
+        }
+
+        int finalCount = count;
+        ctx.getSource().sendSuccess(() -> Component.literal(finalCount + " player(s) were asked to open tb_mini loadout GUI."), true);
         return count > 0 ? Command.SINGLE_SUCCESS : 0;
     }
 }
-

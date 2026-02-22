@@ -5,7 +5,7 @@ import net.minecraftforge.network.NetworkEvent;
 
 import java.util.function.Supplier;
 
-public class SessionSyncStatePacket {
+public class SessionStatePacket {
     private final String stateType;
     private final String sessionId;
     private final String nonce;
@@ -16,7 +16,7 @@ public class SessionSyncStatePacket {
     private final String clientMetaHash;
     private final String payloadDigest;
 
-    public SessionSyncStatePacket(
+    public SessionStatePacket(
             String stateType,
             String sessionId,
             String nonce,
@@ -74,7 +74,7 @@ public class SessionSyncStatePacket {
         return payloadDigest;
     }
 
-    public static void encode(SessionSyncStatePacket msg, FriendlyByteBuf buf) {
+    public static void encode(SessionStatePacket msg, FriendlyByteBuf buf) {
         buf.writeUtf(msg.stateType, 32);
         buf.writeUtf(msg.sessionId, 128);
         buf.writeUtf(msg.nonce, 256);
@@ -86,8 +86,8 @@ public class SessionSyncStatePacket {
         buf.writeUtf(msg.payloadDigest, 128);
     }
 
-    public static SessionSyncStatePacket decode(FriendlyByteBuf buf) {
-        return new SessionSyncStatePacket(
+    public static SessionStatePacket decode(FriendlyByteBuf buf) {
+        return new SessionStatePacket(
                 buf.readUtf(32),
                 buf.readUtf(128),
                 buf.readUtf(256),
@@ -100,8 +100,9 @@ public class SessionSyncStatePacket {
         );
     }
 
-    public static void handle(SessionSyncStatePacket msg, Supplier<NetworkEvent.Context> ctx) {
+    public static void handle(SessionStatePacket msg, Supplier<NetworkEvent.Context> ctx) {
         ctx.get().setPacketHandled(true);
     }
 }
+
 

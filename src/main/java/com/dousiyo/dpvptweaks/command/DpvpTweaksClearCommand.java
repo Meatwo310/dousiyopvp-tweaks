@@ -27,7 +27,6 @@ public class DpvpTweaksClearCommand {
         var players = EntityArgument.getPlayers(ctx, "players");
         int playerSize = players.size();
         for (ServerPlayer player : players) {
-            // Clear the player's inventory but keep the armor
             player.getInventory().items.clear();
             player.getInventory().offhand.clear();
         }
@@ -39,7 +38,6 @@ public class DpvpTweaksClearCommand {
         var players = EntityArgument.getPlayers(ctx, "players");
         int playerSize = players.size();
         for (ServerPlayer player : players) {
-            // Clear the player's armor
             player.getInventory().armor.clear();
         }
         ctx.getSource().sendSuccess(() -> Component.literal(playerSize + "人のプレイヤーの防具スロットを空にしました"), true);

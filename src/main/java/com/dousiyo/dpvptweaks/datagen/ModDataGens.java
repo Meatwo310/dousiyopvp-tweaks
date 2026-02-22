@@ -19,11 +19,8 @@ public class ModDataGens {
         DataGenerator generator = event.getGenerator();
         PackOutput output = generator.getPackOutput();
         ExistingFileHelper efh = event.getExistingFileHelper();
-//        CompletableFuture<HolderLookup.Provider> lookupProvider = event.getLookupProvider();
 
         LanguageGen.register(includeClient, generator);
         ModelGen.register(includeClient, generator, output, efh);
-//        Tag.register(includeServer, generator, output, lookupProvider, efh);
-//        LootTable.register(includeServer, generator, output);
     }
 }

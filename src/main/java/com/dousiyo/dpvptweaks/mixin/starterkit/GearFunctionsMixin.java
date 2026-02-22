@@ -18,7 +18,6 @@ public class GearFunctionsMixin {
             remap = false
     )
     private static void onEmptiedInventory(Inventory inventory) {
-        // Clear the inventory but keep the armor
         inventory.items.clear();
         inventory.offhand.clear();
     }

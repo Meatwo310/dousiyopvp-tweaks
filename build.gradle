@@ -20,7 +20,6 @@ println "Java: ${System.getProperty 'java.version'}, JVM: ${System.getProperty '
 minecraft {
     mappings channel: mapping_channel, version: mapping_version
     copyIdeResources = true
-    // accessTransformer = file('src/main/resources/META-INF/accesstransformer.cfg')
 
     runs {
         configureEach {
@@ -65,19 +64,6 @@ repositories {
         dir 'libs'
     }
 
-//    exclusiveContent {
-//        forRepository {
-//            maven {
-//                name = "Modrinth"
-//                url = "https://api.modrinth.com/maven"
-//            }
-//        }
-//        forRepositories(fg.repository)
-//        filter {
-//            includeGroup "maven.modrinth"
-//        }
-//    }
-
     maven {
         url "https://cursemaven.com"
         content {
@@ -86,14 +72,12 @@ repositories {
     }
 
     maven {
-        // Shedaniel's maven (Architectury API)
         url = "https://maven.architectury.dev"
         content {
             includeGroup "dev.architectury"
         }
     }
 
-    // KubeJS and Rhino
     maven {
         url "https://maven.latvian.dev/releases"
         content {
@@ -104,7 +88,6 @@ repositories {
 }
 
 dependencies {
-    //noinspection VulnerableLibrariesLocal
     minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
     annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
 

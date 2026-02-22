@@ -5,17 +5,17 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.network.NetworkRegistry;
 import net.minecraftforge.network.simple.SimpleChannel;
 
-public class ClientNetwork {
+public class RelayNetwork {
 
-    public static final String CHANNEL_NAMESPACE = "dousiyoserver";
-    public static final String CHANNEL_NAME = "main";
+    public static final String CHANNEL_NAMESPACE = "dousiyoanticheat";
+    public static final String CHANNEL_NAME = "session_consistency";
     public static final String PROTOCOL_VERSION = "1";
 
     public static final SimpleChannel CHANNEL = NetworkRegistry.newSimpleChannel(
             ResourceLocation.fromNamespaceAndPath(CHANNEL_NAMESPACE, CHANNEL_NAME),
             () -> PROTOCOL_VERSION,
-            ClientNetwork::isCompatibleVersion,
-            ClientNetwork::isCompatibleVersion
+            RelayNetwork::isCompatibleVersion,
+            RelayNetwork::isCompatibleVersion
     );
 
     private static int packetId = 0;
@@ -31,30 +31,26 @@ public class ClientNetwork {
     }
 
     public static void register() {
+        // S -> C: session seed
         CHANNEL.registerMessage(
                 nextId(),
-                OpenLoadoutGuiPacket.class,
-                OpenLoadoutGuiPacket::encode,
-                OpenLoadoutGuiPacket::decode,
-                OpenLoadoutGuiPacket::handle
+                SessionSeedPacket.class,
+                SessionSeedPacket::encode,
+                SessionSeedPacket::decode,
+                SessionSeedPacket::handle
         );
 
+        // C -> S: session state and heartbeat
         CHANNEL.registerMessage(
                 nextId(),
-                OpenMiniLoadoutGuiPacket.class,
-                OpenMiniLoadoutGuiPacket::encode,
-                OpenMiniLoadoutGuiPacket::decode,
-                OpenMiniLoadoutGuiPacket::handle
+                SessionStatePacket.class,
+                SessionStatePacket::encode,
+                SessionStatePacket::decode,
+                SessionStatePacket::handle
         );
 
-        CHANNEL.registerMessage(
-                nextId(),
-                SelectLoadoutPacket.class,
-                SelectLoadoutPacket::encode,
-                SelectLoadoutPacket::decode,
-                SelectLoadoutPacket::handle
-        );
-
-        DpvpTweaks.LOGGER.info("[{}] Gameplay network packets registered", DpvpTweaks.MOD_NAME);
+        DpvpTweaks.LOGGER.info("[{}] Relay network packets registered", DpvpTweaks.MOD_NAME);
     }
 }
+
+

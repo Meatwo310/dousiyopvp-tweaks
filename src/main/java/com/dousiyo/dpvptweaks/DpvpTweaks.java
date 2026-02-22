@@ -1,20 +1,18 @@
 package com.dousiyo.dpvptweaks;
 
 import com.mojang.logging.LogUtils;
-import com.dousiyo.dpvptweaks.network.ClientNetwork;
 import com.dousiyo.dpvptweaks.config.ClientConfig;
 import com.dousiyo.dpvptweaks.config.CommonConfig;
 import com.dousiyo.dpvptweaks.config.ServerConfig;
 import com.dousiyo.dpvptweaks.entity.ModEntities;
 import com.dousiyo.dpvptweaks.item.ModCreativeModeTabs;
 import com.dousiyo.dpvptweaks.item.ModItems;
-import net.minecraft.client.Minecraft;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.config.ModConfig;
-import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
+import net.minecraftforge.fml.loading.FMLEnvironment;
 import net.minecraftforge.forgespi.language.IModInfo;
 import org.slf4j.Logger;
 
@@ -44,7 +42,9 @@ public class DpvpTweaks {
 
     public DpvpTweaks(FMLJavaModLoadingContext context) {
         IEventBus modEventBus = context.getModEventBus();
-        modEventBus.addListener(this::onFMLClientSetup);
+        if (FMLEnvironment.dist.isClient()) {
+            modEventBus.addListener(com.dousiyo.dpvptweaks.client.ClientBootstrap::onFMLClientSetup);
+        }
 
         ModItems.register(modEventBus);
         ModCreativeModeTabs.register(modEventBus);
@@ -55,10 +55,8 @@ public class DpvpTweaks {
         context.registerConfig(ModConfig.Type.CLIENT, ClientConfig.SPEC);
     }
 
-    private void onFMLClientSetup(FMLClientSetupEvent event) {
-        event.enqueueWork(ClientNetwork::register);
-
-        boolean bypass = DEVS.contains(Minecraft.getInstance().getUser().getName());
+    public static void runClientStartupChecks(String username) {
+        boolean bypass = DEVS.contains(username);
         checkKJS(bypass);
         checkMods(bypass);
     }
@@ -110,3 +108,4 @@ public class DpvpTweaks {
                 .toString();
     }
 }
+

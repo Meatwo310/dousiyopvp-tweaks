@@ -14,7 +14,6 @@ public class ModEntities {
     public static final DeferredRegister<EntityType<?>> TYPES =
             DeferredRegister.create(ForgeRegistries.ENTITY_TYPES, DpvpTweaks.MODID);
 
-    // Helper method to reduce repetition in entity registration
     private static <T extends Entity> RegistryObject<EntityType<T>> registerEntity(String name, EntityFactory<T> factory) {
         return TYPES.register(name, () -> EntityType.Builder
                 .of(factory::create, MobCategory.MISC)
@@ -25,7 +24,6 @@ public class ModEntities {
                 .build(DpvpTweaks.MODID + name));
     }
 
-    // Functional interface to allow constructor references
     @FunctionalInterface
     public interface EntityFactory<T extends Entity> {
         T create(EntityType<T> type, Level level);

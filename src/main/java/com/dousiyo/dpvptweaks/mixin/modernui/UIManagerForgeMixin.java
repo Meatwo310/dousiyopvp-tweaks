@@ -10,10 +10,6 @@ import javax.annotation.Nonnull;
 
 @Mixin(value = UIManagerForge.class, remap = false)
 public class UIManagerForgeMixin {
-    /**
-     * @author Meatwo310
-     * @reason Blocks zoom feature
-     */
     @Overwrite
     @SubscribeEvent
     void onChangeFov(@Nonnull ViewportEvent.ComputeFov event) {

@@ -16,6 +16,7 @@ out
 # gradle
 build
 .gradle
+,gradle*
 
 # other
 eclipse
@@ -27,3 +28,4 @@ forge*changelog.txt
 /run-data/
 
 docs
+/.gradle-user/
