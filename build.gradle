@@ -118,7 +118,7 @@ dependencies {
     runtimeOnly fg.deobf("curse.maven:jei-238222:6600311")
     runtimeOnly fg.deobf("curse.maven:jei-integration-265917:4999754")
     runtimeOnly fg.deobf("curse.maven:jade-324717:6855440")
-
+    implementation fg.deobf("curse.maven:rubidium-extra-654373:6101745")
     implementation fg.deobf("curse.maven:collective-342584:6429218")
     implementation fg.deobf("curse.maven:starter-kit-390717:6429851")
 
@@ -128,8 +128,6 @@ dependencies {
     runtimeOnly fg.deobf("dev.latvian.mods:rhino-forge:2001.2.3-build.10")
     runtimeOnly fg.deobf("dev.architectury:architectury-forge:9.2.14")
 
-    implementation fg.deobf("blank:teampinmod-1.20.1:v1.0.3")
-
     implementation fg.deobf("curse.maven:modern-ui-352491:6199942")
 
     runtimeOnly fg.deobf("curse.maven:embeddium-908741:5681725")
@@ -138,16 +136,16 @@ dependencies {
     implementation fg.deobf("curse.maven:curios-309927:6418456")
 
     implementation fg.deobf("curse.maven:armourers-workshop-229523:6965580")
-    implementation fg.deobf("curse.maven:timeless-and-classics-zero-1028108:6654541")
+    implementation fg.deobf("curse.maven:timeless-and-classics-zero-1028108:7401617")
     runtimeOnly fg.deobf("curse.maven:tacz-lesraisins-tactical-equipements-1273094:6751092")
     runtimeOnly fg.deobf("curse.maven:playeranimator-658587:4587214")
     runtimeOnly fg.deobf("curse.maven:cloth-config-348521:5729105")
 
-    runtimeOnly fg.deobf("curse.maven:superb-warfare-1218165:6940728")
+    runtimeOnly fg.deobf("curse.maven:superb-warfare-1218165:7292685")
     runtimeOnly fg.deobf("curse.maven:geckolib-388172:6920925")
 
     runtimeOnly fg.deobf("curse.maven:caelus-308989:5281700")
-    implementation fg.deobf("curse.maven:irons-spells-n-spellbooks-855414:6970299")\
+
 }
 
 mixin {
