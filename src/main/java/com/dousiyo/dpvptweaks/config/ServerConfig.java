@@ -57,6 +57,14 @@ public class ServerConfig {
             .comment("Ignore any packet from clients that request to show or hide their ANY curios.")
             .define("curiosIgnoreRenderChange", false);
 
+    public static final ForgeConfigSpec.ConfigValue<List<? extends String>> CLEAR_INVENTORY_ON_DEATH_TEAMS = BUILDER
+            .comment("Players in these scoreboard teams will have inventory cleared on death.")
+            .defineList("clearInventoryOnDeathTeams", List.of(), o -> o instanceof String);
+
+    public static final ForgeConfigSpec.ConfigValue<List<? extends String>> SET_SPECTATOR_ON_DEATH_TEAMS = BUILDER
+            .comment("Players in these scoreboard teams will be set to spectator on death.")
+            .defineList("setSpectatorOnDeathTeams", List.of(), o -> o instanceof String);
+
     public static final ForgeConfigSpec SPEC = BUILDER.build();
 
     public static Set<String> mutedPlayersSet = Set.of();
