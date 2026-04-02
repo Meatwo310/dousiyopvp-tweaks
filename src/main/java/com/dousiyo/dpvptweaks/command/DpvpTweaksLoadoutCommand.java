@@ -1,6 +1,6 @@
 package com.dousiyo.dpvptweaks.command;
 
-import com.dousiyo.dpvptweaks.network.ClientNetwork;
+import com.dousiyo.dpvptweaks.network.LoadoutGuiNetwork;
 import com.dousiyo.dpvptweaks.network.OpenLoadoutGuiPacket;
 import com.dousiyo.dpvptweaks.network.OpenMiniLoadoutGuiPacket;
 import com.mojang.brigadier.Command;
@@ -34,7 +34,7 @@ public class DpvpTweaksLoadoutCommand {
         var players = EntityArgument.getPlayers(ctx, "players");
         int count = 0;
         for (ServerPlayer player : players) {
-            ClientNetwork.CHANNEL.send(PacketDistributor.PLAYER.with(() -> player), new OpenLoadoutGuiPacket());
+            LoadoutGuiNetwork.CHANNEL.send(PacketDistributor.PLAYER.with(() -> player), new OpenLoadoutGuiPacket());
             count++;
         }
 
@@ -47,7 +47,7 @@ public class DpvpTweaksLoadoutCommand {
         var players = EntityArgument.getPlayers(ctx, "players");
         int count = 0;
         for (ServerPlayer player : players) {
-            ClientNetwork.CHANNEL.send(PacketDistributor.PLAYER.with(() -> player), new OpenMiniLoadoutGuiPacket());
+            LoadoutGuiNetwork.CHANNEL.send(PacketDistributor.PLAYER.with(() -> player), new OpenMiniLoadoutGuiPacket());
             count++;
         }
 
@@ -56,3 +56,4 @@ public class DpvpTweaksLoadoutCommand {
         return count > 0 ? Command.SINGLE_SUCCESS : 0;
     }
 }
+

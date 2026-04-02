@@ -1,12 +1,12 @@
 package com.dousiyo.dpvptweaks.command;
 
+import com.dousiyo.dpvptweaks.config.ServerConfig;
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.arguments.BoolArgumentType;
 import com.mojang.brigadier.arguments.FloatArgumentType;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
-import com.dousiyo.dpvptweaks.config.ServerConfig;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.network.chat.Component;
@@ -27,6 +27,8 @@ public class DpvpTweaksConfigCommand {
                 .then(Commands.literal("death")
                         .then(configStringList("clearInventoryTeams", ServerConfig.CLEAR_INVENTORY_ON_DEATH_TEAMS))
                         .then(configStringList("spectatorTeams", ServerConfig.SET_SPECTATOR_ON_DEATH_TEAMS)))
+                .then(Commands.literal("capture")
+                        .then(config("enabled", ServerConfig.CAPTURE_ENABLED)))
                 .executes(ctx -> {
                     String message = """
                             Current config:
@@ -37,7 +39,8 @@ public class DpvpTweaksConfigCommand {
                             valine3g damage: %s
                             valine3g cooldown: %d
                             death clear inventory teams: %s
-                            death spectator teams: %s""".formatted(
+                            death spectator teams: %s
+                            capture enabled: %s""".formatted(
                             ServerConfig.VALINE1G_DAMAGE.get(),
                             ServerConfig.VALINE1G_COOLDOWN.get(),
                             ServerConfig.VALINE2G_DAMAGE.get(),
@@ -45,7 +48,8 @@ public class DpvpTweaksConfigCommand {
                             ServerConfig.VALINE3G_DAMAGE.get(),
                             ServerConfig.VALINE3G_COOLDOWN.get(),
                             listToText(ServerConfig.CLEAR_INVENTORY_ON_DEATH_TEAMS.get()),
-                            listToText(ServerConfig.SET_SPECTATOR_ON_DEATH_TEAMS.get())
+                            listToText(ServerConfig.SET_SPECTATOR_ON_DEATH_TEAMS.get()),
+                            ServerConfig.CAPTURE_ENABLED.get()
                     );
                     ctx.getSource().sendSuccess(() -> Component.literal(message), false);
                     return Command.SINGLE_SUCCESS;

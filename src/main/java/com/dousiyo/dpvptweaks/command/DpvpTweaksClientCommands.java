@@ -28,8 +28,8 @@ public class DpvpTweaksClientCommands {
         event.getDispatcher().register(
                 Commands.literal("loadout")
                         .executes(ctx -> {
-                            sendClientMessage("Current theme: " + ClientConfig.LOADOUT_THEME_MODE.get().name().toLowerCase(Locale.ROOT));
-                            sendClientMessage("Available: " + String.join(", ", THEMES));
+                            sendClientMessage("loadout", "Current theme: " + ClientConfig.LOADOUT_THEME_MODE.get().name().toLowerCase(Locale.ROOT));
+                            sendClientMessage("loadout", "Available: " + String.join(", ", THEMES));
                             return Command.SINGLE_SUCCESS;
                         })
                         .then(Commands.argument("theme", StringArgumentType.word())
@@ -38,14 +38,28 @@ public class DpvpTweaksClientCommands {
                                     String raw = StringArgumentType.getString(ctx, "theme");
                                     ClientConfig.LoadoutThemeMode mode = parseTheme(raw);
                                     if (mode == null) {
-                                        sendClientMessage("Invalid theme: " + raw);
-                                        sendClientMessage("Available: " + String.join(", ", THEMES));
+                                        sendClientMessage("loadout", "Invalid theme: " + raw);
+                                        sendClientMessage("loadout", "Available: " + String.join(", ", THEMES));
                                         return 0;
                                     }
                                     ClientConfig.LOADOUT_THEME_MODE.set(mode);
-                                    sendClientMessage("Loadout theme set to: " + mode.name().toLowerCase(Locale.ROOT));
+                                    sendClientMessage("loadout", "Loadout theme set to: " + mode.name().toLowerCase(Locale.ROOT));
                                     return Command.SINGLE_SUCCESS;
                                 }))
+        );
+
+        event.getDispatcher().register(
+                Commands.literal("capturehud")
+                        .executes(ctx -> {
+                            sendCaptureHudStatus();
+                            return Command.SINGLE_SUCCESS;
+                        })
+                        .then(Commands.literal("on")
+                                .executes(ctx -> setCaptureHudEnabled(true)))
+                        .then(Commands.literal("off")
+                                .executes(ctx -> setCaptureHudEnabled(false)))
+                        .then(Commands.literal("toggle")
+                                .executes(ctx -> setCaptureHudEnabled(!isCaptureHudEnabled())))
         );
     }
 
@@ -57,11 +71,30 @@ public class DpvpTweaksClientCommands {
         }
     }
 
-    private static void sendClientMessage(String text) {
+    private static boolean isCaptureHudEnabled() {
+        return ClientConfig.CAPTURE_SHOW_OVERVIEW_HUD.get() || ClientConfig.CAPTURE_SHOW_FOCUS_HUD.get();
+    }
+
+    private static int setCaptureHudEnabled(boolean enabled) {
+        ClientConfig.CAPTURE_SHOW_OVERVIEW_HUD.set(enabled);
+        ClientConfig.CAPTURE_SHOW_FOCUS_HUD.set(enabled);
+        sendClientMessage("capturehud", "Capture HUD: " + (enabled ? "on" : "off"));
+        return Command.SINGLE_SUCCESS;
+    }
+
+    private static void sendCaptureHudStatus() {
+        sendClientMessage("capturehud", "Overview HUD: " + onOff(ClientConfig.CAPTURE_SHOW_OVERVIEW_HUD.get()));
+        sendClientMessage("capturehud", "Focus HUD: " + onOff(ClientConfig.CAPTURE_SHOW_FOCUS_HUD.get()));
+    }
+
+    private static String onOff(boolean value) {
+        return value ? "on" : "off";
+    }
+
+    private static void sendClientMessage(String tag, String text) {
         Minecraft mc = Minecraft.getInstance();
         if (mc.player != null) {
-            mc.player.displayClientMessage(Component.literal("[loadout] " + text), false);
+            mc.player.displayClientMessage(Component.literal("[" + tag + "] " + text), false);
         }
     }
 }
-

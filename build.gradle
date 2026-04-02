@@ -15,6 +15,13 @@ base {
 }
 
 java.toolchain.languageVersion = JavaLanguageVersion.of(17)
+sourceSets {
+    main {
+        resources {
+            srcDir 'src/generated/resources'
+        }
+    }
+}
 
 println "Java: ${System.getProperty 'java.version'}, JVM: ${System.getProperty 'java.vm.version'} (${System.getProperty 'java.vendor'}), Arch: ${System.getProperty 'os.arch'}"
 minecraft {
@@ -42,6 +49,7 @@ minecraft {
         }
 
         server {
+            workingDirectory project.file('run-server')
             property 'forge.enabledGameTestNamespaces', mod_id
             args '--nogui'
         }
@@ -57,9 +65,9 @@ minecraft {
     }
 }
 
-sourceSets.main.resources { srcDir 'src/generated/resources' }
 
 repositories {
+    mavenCentral()
     flatDir {
         dir 'libs'
     }
@@ -90,12 +98,10 @@ repositories {
 dependencies {
     minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
     annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
-
     compileOnly(annotationProcessor("io.github.llamalad7:mixinextras-common:0.5.0"))
     implementation(jarJar("io.github.llamalad7:mixinextras-forge:0.5.0")) {
         jarJar.ranged(it, "[0.5.0,)")
     }
-
     runtimeOnly fg.deobf("curse.maven:catalogue-459701:4766090")
     runtimeOnly fg.deobf("curse.maven:configured-457570:5180900")
     runtimeOnly fg.deobf("curse.maven:jei-238222:6600311")
@@ -105,7 +111,7 @@ dependencies {
     implementation fg.deobf("curse.maven:collective-342584:6429218")
     implementation fg.deobf("curse.maven:starter-kit-390717:6429851")
 
-    implementation fg.deobf("curse.maven:lightmans-currency-472521:7247219")
+    implementation fg.deobf("curse.maven:lightmans-currency-472521:7697348")
 
     runtimeOnly fg.deobf("dev.latvian.mods:kubejs-forge:2001.6.5-build.16")
     runtimeOnly fg.deobf("dev.latvian.mods:rhino-forge:2001.2.3-build.10")
@@ -120,6 +126,7 @@ dependencies {
 
     implementation fg.deobf("curse.maven:armourers-workshop-229523:6965580")
     implementation fg.deobf("curse.maven:timeless-and-classics-zero-1028108:7401617")
+    compileOnly fg.deobf("curse.maven:timeless-and-classics-zero-1028108:7401617")
     runtimeOnly fg.deobf("curse.maven:tacz-lesraisins-tactical-equipements-1273094:6751092")
     runtimeOnly fg.deobf("curse.maven:playeranimator-658587:4587214")
     runtimeOnly fg.deobf("curse.maven:cloth-config-348521:5729105")
@@ -168,4 +175,25 @@ tasks.named('jar', Jar).configure {
 
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
+}
+
+tasks.register('setupServer') {
+    group = 'custom'
+    description = 'Sets up the server run directory with eula.txt and server.properties'
+
+    doLast {
+        file('run-server').mkdirs()
+        file('run-server/eula.txt').text = 'eula=true'
+        file('run-server/server.properties').text = '''
+allow-flight=true
+enable-command-block=true
+gamemode=creative
+online-mode=false
+spawn-protection=0
+'''.stripIndent().trim()
+    }
+}
+
+tasks.matching { it.name == 'runServer' }.configureEach {
+    dependsOn 'setupServer'
 }

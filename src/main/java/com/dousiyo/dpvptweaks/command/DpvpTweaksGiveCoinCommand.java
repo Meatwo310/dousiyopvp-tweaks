@@ -47,16 +47,23 @@ public class DpvpTweaksGiveCoinCommand {
             amount = 1;
         }
 
-        var coinStack = coin.createItemStack(amount, true);
-        if (!CoinAPI.getApi().IsAllowedInCoinContainer(coinStack, false)) throw INVALID_COIN.create();
+        ItemStack sourceStack = coin.createItemStack(amount, true);
+        if (!CoinAPI.getApi().IsAllowedInCoinContainer(sourceStack, false)) {
+            throw INVALID_COIN.create();
+        }
 
         for (var player : players) {
+            ItemStack coinStack = sourceStack.copy();
             ItemStack wallet = CoinAPI.getApi().getEquippedWallet(player);
             if (!wallet.isEmpty()) {
                 coinStack = WalletItem.PickupCoin(wallet, coinStack);
             }
-            if (!coinStack.isEmpty()) ItemHandlerHelper.giveItemToPlayer(player, coinStack);
-            if (!player.level().isClientSide) WalletItem.playCollectSound(player, wallet);
+            if (!coinStack.isEmpty()) {
+                ItemHandlerHelper.giveItemToPlayer(player, coinStack);
+            }
+            if (!player.level().isClientSide) {
+                WalletItem.playCollectSound(player, wallet);
+            }
         }
 
         return Command.SINGLE_SUCCESS;

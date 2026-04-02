@@ -2,11 +2,13 @@ package com.dousiyo.dpvptweaks;
 
 import com.mojang.logging.LogUtils;
 import com.dousiyo.dpvptweaks.config.ClientConfig;
-import com.dousiyo.dpvptweaks.config.CommonConfig;
 import com.dousiyo.dpvptweaks.config.ServerConfig;
 import com.dousiyo.dpvptweaks.entity.ModEntities;
 import com.dousiyo.dpvptweaks.item.ModCreativeModeTabs;
 import com.dousiyo.dpvptweaks.item.ModItems;
+import com.dousiyo.dpvptweaks.network.CaptureNetwork;
+import com.dousiyo.dpvptweaks.network.DousiyoServerMainReceiverNetwork;
+import com.dousiyo.dpvptweaks.network.LoadoutGuiNetwork;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.common.Mod;
@@ -26,6 +28,7 @@ public class DpvpTweaks {
     public static final String MODID = "dpvptweaks";
     public static final String MOD_NAME = "Dousiyo Client";
     public static final Logger LOGGER = LogUtils.getLogger();
+    private static final String DOUSEIYO_SERVER_MODID = "dousiyoserver";
 
     public static final Set<String> ALLOWED_MODS = Set.of(
             "appleskin", "architectury", "armourers_workshop", "ashvehicle", "chat_heads", "chloride", "cloth_config", "collective", "commongroovylibrary", "configured", "controlling", "curios", "damage_indicator", "dpvptweaks", "dragonrise_reforge", "dummmmmmy", "eatinganimation", "embeddium", "embeddium_extra", "endlessammo", "entityculling", "extremesoundmuffler", "ferritecore", "forge", "geckolib", "gml", "guccivuitton", "immediatelyfast", "javd", "journeymap", "journeymapteams", "jpy", "kotlinforforge", "kubejs", "lightmanscurrency", "lrarmor", "lrtactical", "maxstuff", "meatwo310", "minecraft", "mixinsquared", "modernfix", "modernui", "moonlight", "mousetweaks", "notenoughanimations", "notenoughcrashes", "oculus", "packetfixer", "parcool", "parcool_compat_addon", "playeranimator", "presencefootsteps", "puzzlesaccessapi", "puzzleslib", "rhino", "roughtweaks", "rubidium", "seamless_loading_screen", "searchables", "shouldersurfing", "softdeepslate", "sound_physics_remastered", "spotmod", "starterkit", "stylisheffects", "superbwarfare", "tacz", "tacz_presence", "taczadditions", "taczlabs", "tacztweaks", "takkit", "timestamp_chat", "tp_shooting", "transition", "trender", "trenzalore", "tsukichat", "untranslateditems", "waterdripsound", "xlpackets", "yet_another_config_lib_v3"
@@ -33,26 +36,33 @@ public class DpvpTweaks {
     );
 
     public static final Set<String> DEVS = Set.of(
-            "Dev",
-            "Meatwo310",
-            "Meatwo310offline",
-            "uribo_ya",
-            "valine_3g"
+
     );
 
     public DpvpTweaks(FMLJavaModLoadingContext context) {
         IEventBus modEventBus = context.getModEventBus();
         if (FMLEnvironment.dist.isClient()) {
             modEventBus.addListener(com.dousiyo.dpvptweaks.client.ClientBootstrap::onFMLClientSetup);
+        } else {
+            registerFallbackDousiyoServerMainReceiver();
         }
 
         ModItems.register(modEventBus);
         ModCreativeModeTabs.register(modEventBus);
         ModEntities.register(modEventBus);
+        CaptureNetwork.register();
+        LoadoutGuiNetwork.register();
 
         context.registerConfig(ModConfig.Type.SERVER, ServerConfig.SPEC);
-        context.registerConfig(ModConfig.Type.COMMON, CommonConfig.SPEC);
         context.registerConfig(ModConfig.Type.CLIENT, ClientConfig.SPEC);
+    }
+
+    private static void registerFallbackDousiyoServerMainReceiver() {
+        if (ModList.get().isLoaded(DOUSEIYO_SERVER_MODID)) {
+            LOGGER.info("[{}] Skipping fallback receiver for dousiyoserver:main because mod '{}' is loaded", MOD_NAME, DOUSEIYO_SERVER_MODID);
+            return;
+        }
+        DousiyoServerMainReceiverNetwork.register();
     }
 
     public static void runClientStartupChecks(String username) {
@@ -81,7 +91,7 @@ public class DpvpTweaks {
         LOGGER.error("Following scripts are not allowed: {}", (Object) files);
         if (bypass) return;
 
-        Runtime.getRuntime().halt(310);
+        LOGGER.warn("[{}] Unauthorized client scripts were detected, but crash enforcement is disabled", MOD_NAME);
     }
 
     private static void checkMods(boolean bypass) {
@@ -97,7 +107,7 @@ public class DpvpTweaks {
         LOGGER.error("Following mods are not allowed: {}", modsToString(mods));
         if (bypass) return;
 
-        Runtime.getRuntime().halt(-310);
+        LOGGER.warn("[{}] Unauthorized mods were detected, but crash enforcement is disabled", MOD_NAME);
     }
 
     private static String modsToString(Set<String> mods) {
@@ -108,4 +118,6 @@ public class DpvpTweaks {
                 .toString();
     }
 }
+
+
 

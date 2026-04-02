@@ -10,14 +10,14 @@
     "minecraft.DamageTypeMixin",
     "minecraft.FunctionCommandMixin",
     "starterkit.GearFunctionsMixin",
-    "starterkit.StarterServerEventsMixin",
-    "tacz.RenderHeadShotAABBMixin"
+    "starterkit.StarterServerEventsMixin"
   ],
   "client": [
     "armourers_workshop.SkinOverriddenManagerMixin",
     "chloride.ZoomMixin",
     "lightmanscurrency.WalletLayerMixin",
-    "modernui.UIManagerForgeMixin"
+    "modernui.UIManagerForgeMixin",
+    "tacz.RenderHeadShotAABBMixin"
   ],
   "server": [],
   "injectors": {

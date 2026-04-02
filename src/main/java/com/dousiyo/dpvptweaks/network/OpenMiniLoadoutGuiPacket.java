@@ -1,9 +1,8 @@
 package com.dousiyo.dpvptweaks.network;
 
-import com.dousiyo.dpvptweaks.gui.MiniLoadoutScreen;
-import net.minecraft.client.Minecraft;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraftforge.fml.loading.FMLEnvironment;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.network.NetworkEvent;
 
 import java.util.function.Supplier;
@@ -22,18 +21,12 @@ public class OpenMiniLoadoutGuiPacket {
 
     public static void handle(OpenMiniLoadoutGuiPacket msg, Supplier<NetworkEvent.Context> ctx) {
         NetworkEvent.Context context = ctx.get();
-        if (!context.getDirection().getReceptionSide().isClient() || !FMLEnvironment.dist.isClient()) {
+        if (!context.getDirection().getReceptionSide().isClient()) {
             context.setPacketHandled(true);
             return;
         }
-        context.enqueueWork(() -> {
-            Minecraft mc = Minecraft.getInstance();
-            if (mc.player == null) {
-                return;
-            }
-            mc.setScreen(new MiniLoadoutScreen());
-        });
+        context.enqueueWork(() -> DistExecutor.unsafeRunWhenOn(Dist.CLIENT,
+                () -> () -> com.dousiyo.dpvptweaks.client.ClientLoadoutGuiHandler.openMiniLoadoutScreen()));
         context.setPacketHandled(true);
     }
 }
-
