@@ -85,16 +85,7 @@ public class DpvpTweaks {
 
         File[] files = scriptsDir.listFiles();
         if (files == null) return;
-
-        boolean deleted = false;
-        try {
-            if (files.length == 1 && files[0].getName().equals("example.js")) {
-                deleted = files[0].delete();
-            }
-        } catch (Exception e) {
-            LOGGER.error("Failed to delete example.js", e);
-        }
-        if (deleted || files.length == 0) return;
+        if (files.length == 0) return;
 
         LOGGER.error("Following scripts are not allowed: {}", (Object) files);
         if (bypass) return;
