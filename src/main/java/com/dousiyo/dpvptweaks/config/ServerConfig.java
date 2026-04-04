@@ -65,6 +65,14 @@ public class ServerConfig {
             .comment("Players in these scoreboard teams will be set to spectator on death.")
             .defineList("setSpectatorOnDeathTeams", List.of(), o -> o instanceof String);
 
+    public static final ForgeConfigSpec.ConfigValue<List<? extends String>> OPEN_LOADOUT_ON_RESPAWN_TEAMS = BUILDER
+            .comment("Players in these scoreboard teams will open the normal loadout GUI after death when they respawn.")
+            .defineList("openLoadoutOnRespawnTeams", List.of(), o -> o instanceof String);
+
+    public static final ForgeConfigSpec.ConfigValue<List<? extends String>> OPEN_MINI_LOADOUT_ON_RESPAWN_TEAMS = BUILDER
+            .comment("Players in these scoreboard teams will open the mini loadout GUI after death when they respawn.")
+            .defineList("openMiniLoadoutOnRespawnTeams", List.of("tbg.mini.blue", "tbg.mini.red"), o -> o instanceof String);
+
     public static final ForgeConfigSpec.BooleanValue CAPTURE_ENABLED = BUILDER
             .comment("Enable capture points and ticket bleed feature")
             .define("captureEnabled", true);
@@ -123,6 +131,38 @@ public class ServerConfig {
     public static final ForgeConfigSpec.ConfigValue<List<? extends String>> ON_RED_WIN = BUILDER
             .comment("Server commands executed once when RED wins because BLUE tickets reach minTickets")
             .defineList("onRedWin", List.of(), o -> o instanceof String);
+
+    public static final ForgeConfigSpec.BooleanValue FUNCTION_PALETTE_ENABLED;
+    public static final ForgeConfigSpec.IntValue FUNCTION_PALETTE_REQUIRED_PERMISSION_LEVEL;
+    public static final ForgeConfigSpec.BooleanValue FUNCTION_PALETTE_ALLOW_TAGS;
+    public static final ForgeConfigSpec.ConfigValue<List<? extends String>> FUNCTION_PALETTE_ALLOWED_NAMESPACES;
+    public static final ForgeConfigSpec.BooleanValue FUNCTION_PALETTE_SHOW_RUN_RESULT;
+
+    static {
+        BUILDER.push("function_palette");
+
+        FUNCTION_PALETTE_ENABLED = BUILDER
+                .comment("Enable the function palette GUI and its network handlers.")
+                .define("enabled", true);
+
+        FUNCTION_PALETTE_REQUIRED_PERMISSION_LEVEL = BUILDER
+                .comment("Permission level required to open and run functions from the palette.")
+                .defineInRange("required_permission_level", 2, 0, 4);
+
+        FUNCTION_PALETTE_ALLOW_TAGS = BUILDER
+                .comment("Reserved for future support of #function tags from the palette.")
+                .define("allow_tags", false);
+
+        FUNCTION_PALETTE_ALLOWED_NAMESPACES = BUILDER
+                .comment("Allowlist of namespaces that can be executed from the palette. Use * to allow all.")
+                .defineList("allowed_namespaces", List.of("*"), o -> o instanceof String);
+
+        FUNCTION_PALETTE_SHOW_RUN_RESULT = BUILDER
+                .comment("Show a short confirmation message after a function is executed from the palette.")
+                .define("show_run_result", true);
+
+        BUILDER.pop();
+    }
 
     public static final ForgeConfigSpec SPEC = BUILDER.build();
 

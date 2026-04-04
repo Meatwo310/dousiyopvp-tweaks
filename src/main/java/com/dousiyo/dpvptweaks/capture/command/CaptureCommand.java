@@ -6,10 +6,14 @@ import com.dousiyo.dpvptweaks.capture.data.CapturePointsDefinition;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
+import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import com.mojang.brigadier.Command;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
+import net.minecraft.commands.arguments.DimensionArgument;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -37,13 +41,20 @@ public final class CaptureCommand {
                                         .executes(CaptureCommand::remove)))
                         .then(Commands.literal("setarea")
                                 .then(Commands.argument("slot", IntegerArgumentType.integer(0, 4))
-                                        .then(Commands.argument("x1", IntegerArgumentType.integer())
-                                                .then(Commands.argument("y1", IntegerArgumentType.integer())
-                                                        .then(Commands.argument("z1", IntegerArgumentType.integer())
-                                                                .then(Commands.argument("x2", IntegerArgumentType.integer())
-                                                                        .then(Commands.argument("y2", IntegerArgumentType.integer())
-                                                                                .then(Commands.argument("z2", IntegerArgumentType.integer())
-                                                                                        .executes(CaptureCommand::setArea))))))))));
+                                        .then(areaArguments(CaptureCommand::setAreaCurrentDimension))
+                                        .then(Commands.literal("in")
+                                                .then(Commands.argument("dimension", DimensionArgument.dimension())
+                                                        .then(areaArguments(CaptureCommand::setAreaSpecifiedDimension)))))));
+    }
+
+    private static com.mojang.brigadier.builder.ArgumentBuilder<CommandSourceStack, ?> areaArguments(Command<CommandSourceStack> command) {
+        return Commands.argument("x1", IntegerArgumentType.integer())
+                .then(Commands.argument("y1", IntegerArgumentType.integer())
+                        .then(Commands.argument("z1", IntegerArgumentType.integer())
+                                .then(Commands.argument("x2", IntegerArgumentType.integer())
+                                        .then(Commands.argument("y2", IntegerArgumentType.integer())
+                                                .then(Commands.argument("z2", IntegerArgumentType.integer())
+                                                        .executes(command))))));
     }
 
     private static int reload(CommandContext<CommandSourceStack> ctx) {
@@ -64,6 +75,7 @@ public final class CaptureCommand {
         for (CapturePointsDefinition.PointDefinition point : manager.listPoints()) {
             String line = "slot=" + point.slot()
                     + " id=" + point.id()
+                    + " dimension=" + point.dimension()
                     + " aabb=(" + point.x1() + "," + point.y1() + "," + point.z1() + ") -> ("
                     + point.x2() + "," + point.y2() + "," + point.z2() + ")";
             ctx.getSource().sendSuccess(() -> Component.literal(line), false);
@@ -83,6 +95,7 @@ public final class CaptureCommand {
 
         String line = "slot=" + point.slot()
                 + " id=" + point.id()
+                + " dimension=" + point.dimension()
                 + " aabb=(" + point.x1() + "," + point.y1() + "," + point.z1() + ") -> ("
                 + point.x2() + "," + point.y2() + "," + point.z2() + ")";
         ctx.getSource().sendSuccess(() -> Component.literal(line), false);
@@ -97,7 +110,15 @@ public final class CaptureCommand {
         return 1;
     }
 
-    private static int setArea(CommandContext<CommandSourceStack> ctx) {
+    private static int setAreaCurrentDimension(CommandContext<CommandSourceStack> ctx) {
+        return setArea(ctx, ctx.getSource().getLevel().dimension());
+    }
+
+    private static int setAreaSpecifiedDimension(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
+        return setArea(ctx, DimensionArgument.getDimension(ctx, "dimension").dimension());
+    }
+
+    private static int setArea(CommandContext<CommandSourceStack> ctx, net.minecraft.resources.ResourceKey<Level> dimension) {
         ServerLevel level = ctx.getSource().getLevel();
         int slot = IntegerArgumentType.getInteger(ctx, "slot");
         int x1 = IntegerArgumentType.getInteger(ctx, "x1");
@@ -107,8 +128,8 @@ public final class CaptureCommand {
         int y2 = IntegerArgumentType.getInteger(ctx, "y2");
         int z2 = IntegerArgumentType.getInteger(ctx, "z2");
 
-        CaptureManager.get(level).setPointArea(level, slot, x1, y1, z1, x2, y2, z2);
-        ctx.getSource().sendSuccess(() -> Component.literal("updated capture point: slot=" + slot), true);
+        CaptureManager.get(level).setPointArea(level, dimension, slot, x1, y1, z1, x2, y2, z2);
+        ctx.getSource().sendSuccess(() -> Component.literal("updated capture point: slot=" + slot + " dimension=" + dimension.location()), true);
         return 1;
     }
 }

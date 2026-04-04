@@ -23,4 +23,14 @@ public final class ClientLoadoutGuiHandler {
         }
         mc.setScreen(new MiniLoadoutScreen());
     }
+
+    public static void closeLoadoutScreen() {
+        Minecraft mc = Minecraft.getInstance();
+        if (mc.player == null) {
+            return;
+        }
+        if (mc.screen instanceof LoadoutScreen) {
+            mc.setScreen(null);
+        }
+    }
 }

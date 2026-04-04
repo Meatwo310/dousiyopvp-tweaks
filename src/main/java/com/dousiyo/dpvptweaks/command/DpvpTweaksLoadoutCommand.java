@@ -1,5 +1,6 @@
 package com.dousiyo.dpvptweaks.command;
 
+import com.dousiyo.dpvptweaks.network.CloseLoadoutGuiPacket;
 import com.dousiyo.dpvptweaks.network.LoadoutGuiNetwork;
 import com.dousiyo.dpvptweaks.network.OpenLoadoutGuiPacket;
 import com.dousiyo.dpvptweaks.network.OpenMiniLoadoutGuiPacket;
@@ -27,6 +28,9 @@ public class DpvpTweaksLoadoutCommand {
                 .then(Commands.literal("tb_mini")
                         .then(Commands.argument("players", EntityArgument.players())
                                 .executes(DpvpTweaksLoadoutCommand::openTbMiniLoadoutGui)))
+                .then(Commands.literal("close")
+                        .then(Commands.argument("players", EntityArgument.players())
+                                .executes(DpvpTweaksLoadoutCommand::closeLoadoutGui)))
         );
     }
 
@@ -55,5 +59,17 @@ public class DpvpTweaksLoadoutCommand {
         ctx.getSource().sendSuccess(() -> Component.literal(finalCount + " player(s) were asked to open tb_mini loadout GUI."), true);
         return count > 0 ? Command.SINGLE_SUCCESS : 0;
     }
-}
 
+    private static int closeLoadoutGui(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
+        var players = EntityArgument.getPlayers(ctx, "players");
+        int count = 0;
+        for (ServerPlayer player : players) {
+            LoadoutGuiNetwork.CHANNEL.send(PacketDistributor.PLAYER.with(() -> player), new CloseLoadoutGuiPacket());
+            count++;
+        }
+
+        int finalCount = count;
+        ctx.getSource().sendSuccess(() -> Component.literal(finalCount + " player(s) were asked to close loadout GUI."), true);
+        return count > 0 ? Command.SINGLE_SUCCESS : 0;
+    }
+}

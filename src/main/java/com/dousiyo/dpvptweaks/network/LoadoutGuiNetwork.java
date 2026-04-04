@@ -39,6 +39,12 @@ public final class LoadoutGuiNetwork {
                 .consumerMainThread(OpenMiniLoadoutGuiPacket::handle)
                 .add();
 
+        CHANNEL.messageBuilder(CloseLoadoutGuiPacket.class, packetId++, NetworkDirection.PLAY_TO_CLIENT)
+                .encoder(CloseLoadoutGuiPacket::encode)
+                .decoder(CloseLoadoutGuiPacket::decode)
+                .consumerMainThread(CloseLoadoutGuiPacket::handle)
+                .add();
+
         DpvpTweaks.LOGGER.info("[{}] Loadout GUI network packets registered", DpvpTweaks.MOD_NAME);
     }
 }

@@ -50,6 +50,18 @@ public class ClientConfig {
     public static final ForgeConfigSpec.IntValue CAPTURE_OVERVIEW_Y_OFFSET = BUILDER
             .comment("Vertical offset for capture overview HUD")
             .defineInRange("captureOverviewYOffset", 24, -120, 200);
+
+    public static final ForgeConfigSpec.BooleanValue FUNCTION_PALETTE_CLOSE_AFTER_RUN;
+
+    static {
+        BUILDER.push("function_palette");
+
+        FUNCTION_PALETTE_CLOSE_AFTER_RUN = BUILDER
+                .comment("Close the function palette screen immediately after sending a run request.")
+                .define("close_after_run", true);
+
+        BUILDER.pop();
+    }
+
     public static final ForgeConfigSpec SPEC = BUILDER.build();
 }
-

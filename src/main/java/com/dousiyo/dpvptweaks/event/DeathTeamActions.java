@@ -3,6 +3,7 @@ package com.dousiyo.dpvptweaks.event;
 import com.dousiyo.dpvptweaks.DpvpTweaks;
 import com.dousiyo.dpvptweaks.config.ServerConfig;
 import com.dousiyo.dpvptweaks.network.LoadoutGuiNetwork;
+import com.dousiyo.dpvptweaks.network.OpenLoadoutGuiPacket;
 import com.dousiyo.dpvptweaks.network.OpenMiniLoadoutGuiPacket;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.GameType;
@@ -13,15 +14,8 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.network.PacketDistributor;
 
-import java.util.Set;
-
 @Mod.EventBusSubscriber(modid = DpvpTweaks.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class DeathTeamActions {
-    private static final Set<String> MINI_LOADOUT_TEAMS = Set.of(
-            "tbg.mini.blue",
-            "tbg.mini.red"
-    );
-
     @SubscribeEvent
     public static void onLivingDeath(LivingDeathEvent event) {
         if (!(event.getEntity() instanceof ServerPlayer player)) {
@@ -58,8 +52,12 @@ public class DeathTeamActions {
         if (matchesConfiguredTeam(teamName, ServerConfig.SET_SPECTATOR_ON_DEATH_TEAMS.get())) {
             player.setGameMode(GameType.SPECTATOR);
         }
-        if (MINI_LOADOUT_TEAMS.contains(teamName)) {
+        if (matchesConfiguredTeam(teamName, ServerConfig.OPEN_MINI_LOADOUT_ON_RESPAWN_TEAMS.get())) {
             LoadoutGuiNetwork.CHANNEL.send(PacketDistributor.PLAYER.with(() -> player), new OpenMiniLoadoutGuiPacket());
+            return;
+        }
+        if (matchesConfiguredTeam(teamName, ServerConfig.OPEN_LOADOUT_ON_RESPAWN_TEAMS.get())) {
+            LoadoutGuiNetwork.CHANNEL.send(PacketDistributor.PLAYER.with(() -> player), new OpenLoadoutGuiPacket());
         }
     }
 

@@ -26,6 +26,7 @@ public class MiniLoadoutScreen extends LoadoutScreen {
                     previewId,
                     Component.literal(loadout.name),
                     weapons,
+                    Component.literal(loadout.weapons),
                     Component.literal(loadout.description)
             ));
             previewId++;

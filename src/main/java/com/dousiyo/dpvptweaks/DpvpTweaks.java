@@ -4,11 +4,15 @@ import com.mojang.logging.LogUtils;
 import com.dousiyo.dpvptweaks.config.ClientConfig;
 import com.dousiyo.dpvptweaks.config.ServerConfig;
 import com.dousiyo.dpvptweaks.entity.ModEntities;
+import com.dousiyo.dpvptweaks.effect.ModEffects;
 import com.dousiyo.dpvptweaks.item.ModCreativeModeTabs;
 import com.dousiyo.dpvptweaks.item.ModItems;
 import com.dousiyo.dpvptweaks.network.CaptureNetwork;
 import com.dousiyo.dpvptweaks.network.DousiyoServerMainReceiverNetwork;
+import com.dousiyo.dpvptweaks.network.FunctionPaletteNetwork;
 import com.dousiyo.dpvptweaks.network.LoadoutGuiNetwork;
+import com.dousiyo.dpvptweaks.pvpstats.network.PvpStatsNetwork;
+import com.dousiyo.dpvptweaks.server.function.FunctionPaletteServerConfig;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.common.Mod;
@@ -50,10 +54,14 @@ public class DpvpTweaks {
         ModItems.register(modEventBus);
         ModCreativeModeTabs.register(modEventBus);
         ModEntities.register(modEventBus);
+        ModEffects.register(modEventBus);
         CaptureNetwork.register();
         LoadoutGuiNetwork.register();
+        FunctionPaletteNetwork.register();
+        PvpStatsNetwork.register();
 
         context.registerConfig(ModConfig.Type.SERVER, ServerConfig.SPEC);
+        context.registerConfig(ModConfig.Type.SERVER, FunctionPaletteServerConfig.SPEC, MODID + "-function_palette-server.toml");
         context.registerConfig(ModConfig.Type.CLIENT, ClientConfig.SPEC);
     }
 
@@ -118,6 +126,3 @@ public class DpvpTweaks {
                 .toString();
     }
 }
-
-
-

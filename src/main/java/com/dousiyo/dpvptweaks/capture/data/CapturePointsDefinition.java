@@ -4,6 +4,9 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
 
 import java.io.IOException;
@@ -12,7 +15,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -61,6 +63,9 @@ public final class CapturePointsDefinition {
             }
 
             String id = point.has("id") ? point.get("id").getAsString() : ("slot_" + slot);
+            String dimension = point.has("dimension")
+                    ? point.get("dimension").getAsString()
+                    : Level.OVERWORLD.location().toString();
             JsonObject aabbObj = point.getAsJsonObject("aabb");
             if (aabbObj == null) {
                 continue;
@@ -73,26 +78,15 @@ public final class CapturePointsDefinition {
             int y2 = aabbObj.get("y2").getAsInt();
             int z2 = aabbObj.get("z2").getAsInt();
 
-            pointMap.put(slot, new PointDefinition(slot, id, x1, y1, z1, x2, y2, z2));
+            pointMap.put(slot, new PointDefinition(slot, id, dimension, x1, y1, z1, x2, y2, z2).normalized());
         }
 
-        Map<Integer, PointDefinition> sorted = pointMap.entrySet().stream()
-                .sorted(Map.Entry.comparingByKey())
-                .collect(LinkedHashMap::new,
-                        (map, entry) -> map.put(entry.getKey(), entry.getValue()),
-                        LinkedHashMap::putAll);
-
-        return new CapturePointsDefinition(sorted);
+        return new CapturePointsDefinition(pointMap);
     }
 
     public CapturePointsDefinition withPoint(PointDefinition point) {
         Map<Integer, PointDefinition> copy = new LinkedHashMap<>(pointsBySlot);
         copy.put(point.slot(), point);
-        copy = copy.entrySet().stream()
-                .sorted(Map.Entry.comparingByKey())
-                .collect(LinkedHashMap::new,
-                        (map, entry) -> map.put(entry.getKey(), entry.getValue()),
-                        LinkedHashMap::putAll);
         return new CapturePointsDefinition(copy);
     }
 
@@ -114,11 +108,19 @@ public final class CapturePointsDefinition {
         return pointsBySlot.size();
     }
 
-    public record PointDefinition(int slot, String id, int x1, int y1, int z1, int x2, int y2, int z2) {
+    public record PointDefinition(int slot, String id, String dimension, int x1, int y1, int z1, int x2, int y2, int z2) {
         public PointDefinition {
             if (slot < 0 || slot > 4) {
                 throw new IllegalArgumentException("slot must be between 0 and 4");
             }
+        }
+
+        public ResourceKey<Level> dimensionKey() {
+            ResourceLocation location = ResourceLocation.tryParse(dimension);
+            if (location == null) {
+                return Level.OVERWORLD;
+            }
+            return ResourceKey.create(net.minecraft.core.registries.Registries.DIMENSION, location);
         }
 
         public AABB toAabb() {
@@ -138,8 +140,7 @@ public final class CapturePointsDefinition {
             int maxX = Math.max(x1, x2);
             int maxY = Math.max(y1, y2);
             int maxZ = Math.max(z1, z2);
-            return new PointDefinition(slot, id, minX, minY, minZ, maxX, maxY, maxZ);
+            return new PointDefinition(slot, id, dimension, minX, minY, minZ, maxX, maxY, maxZ);
         }
     }
 }
-

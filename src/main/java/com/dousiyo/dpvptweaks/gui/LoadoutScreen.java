@@ -242,6 +242,9 @@ public class LoadoutScreen extends Screen {
         LoadoutPreview preview = loadouts.get(globalIndex);
         List<Component> lines = new ArrayList<>();
         lines.add(preview.name());
+        if (!preview.weaponSummary().getString().isBlank()) {
+            lines.add(preview.weaponSummary());
+        }
         if (!preview.description().getString().isBlank()) {
             lines.add(preview.description());
         }
@@ -333,6 +336,7 @@ public class LoadoutScreen extends Screen {
                     previewId,
                     Component.literal(loadout.name),
                     weapons,
+                    Component.literal(loadout.weapons),
                     Component.literal(loadout.description)
             ));
             previewId++;
@@ -406,13 +410,15 @@ public class LoadoutScreen extends Screen {
         NORMAL, HOVER, SELECTED, DISABLED
     }
 
-    public record LoadoutPreview(int id, Component name, List<ItemStack> weaponPreviews, Component description) {
+    public record LoadoutPreview(int id, Component name, List<ItemStack> weaponPreviews, Component weaponSummary, Component description) {
         public LoadoutPreview {
             weaponPreviews = List.copyOf(weaponPreviews);
+            weaponSummary = Objects.requireNonNullElse(weaponSummary, Component.empty());
+            description = Objects.requireNonNullElse(description, Component.empty());
         }
 
         public LoadoutPreview(int id, Component name, List<ItemStack> weaponPreviews) {
-            this(id, name, weaponPreviews, Component.empty());
+            this(id, name, weaponPreviews, Component.empty(), Component.empty());
         }
 
         public ItemStack weaponAt(int index) {

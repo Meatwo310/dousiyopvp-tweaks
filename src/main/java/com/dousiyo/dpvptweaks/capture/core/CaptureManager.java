@@ -10,8 +10,10 @@ import com.dousiyo.dpvptweaks.network.PlayerPointHudStateS2CPacket;
 import com.mojang.logging.LogUtils;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.scores.Team;
 import net.minecraft.world.phys.AABB;
 import net.minecraftforge.fml.loading.FMLPaths;
@@ -90,9 +92,9 @@ public final class CaptureManager {
         return definition.get(slot);
     }
 
-    public void setPointArea(ServerLevel level, int slot, int x1, int y1, int z1, int x2, int y2, int z2) {
+    public void setPointArea(ServerLevel level, ResourceKey<Level> dimension, int slot, int x1, int y1, int z1, int x2, int y2, int z2) {
         String id = definition.get(slot).map(CapturePointsDefinition.PointDefinition::id).orElse("slot_" + slot);
-        CapturePointsDefinition.PointDefinition point = new CapturePointsDefinition.PointDefinition(slot, id, x1, y1, z1, x2, y2, z2).normalized();
+        CapturePointsDefinition.PointDefinition point = new CapturePointsDefinition.PointDefinition(slot, id, dimension.location().toString(), x1, y1, z1, x2, y2, z2).normalized();
         definition = definition.withPoint(point);
         reloadInMemoryDefinition(definition);
         syncAllPlayers(level);
@@ -138,7 +140,7 @@ public final class CaptureManager {
         int interval = Math.max(1, ServerConfig.CAPTURE_OCCUPANCY_UPDATE_INTERVAL_TICKS.get());
         nextOccupancyCheckGameTime = now + interval;
 
-        List<ServerPlayer> players = level.players();
+        List<ServerPlayer> players = level.getServer().getPlayerList().getPlayers();
         processOccupancy(level, now, players);
         processTicketBleed(level, now);
         updateFocusSlots(level);
@@ -317,7 +319,7 @@ public final class CaptureManager {
             int blueCount = 0;
             int redCount = 0;
             for (ServerPlayer player : players) {
-                if (!point.aabb.contains(player.position())) {
+                if (player.serverLevel().dimension() != point.dimension || !point.aabb.contains(player.position())) {
                     continue;
                 }
                 TeamSide side = resolvePlayerTeam(player);
@@ -422,7 +424,7 @@ public final class CaptureManager {
 
     private void updateFocusSlots(ServerLevel level) {
         for (ServerPlayer player : level.getServer().getPlayerList().getPlayers()) {
-            int nextSlot = player.level() == level ? findContainingSlot(player) : -1;
+            int nextSlot = findContainingSlot(player);
             int previousSlot = focusByPlayer.getOrDefault(player.getUUID(), -1);
             if (previousSlot == nextSlot) {
                 continue;
@@ -433,7 +435,7 @@ public final class CaptureManager {
 
     private int findContainingSlot(ServerPlayer player) {
         for (PointRuntime point : points.values()) {
-            if (point.aabb.contains(player.position())) {
+            if (player.serverLevel().dimension() == point.dimension && point.aabb.contains(player.position())) {
                 return point.slot;
             }
         }
@@ -543,7 +545,7 @@ public final class CaptureManager {
 
     private void syncAllPlayers(ServerLevel level) {
         for (ServerPlayer player : level.getServer().getPlayerList().getPlayers()) {
-            int slot = player.level() == level ? findContainingSlot(player) : -1;
+            int slot = findContainingSlot(player);
             syncAllStateToPlayer(player, slot);
         }
     }
@@ -587,7 +589,7 @@ public final class CaptureManager {
     }
 
     private void syncFocusedBoostStates(ServerLevel level) {
-        for (ServerPlayer player : level.players()) {
+        for (ServerPlayer player : level.getServer().getPlayerList().getPlayers()) {
             int slot = focusByPlayer.getOrDefault(player.getUUID(), -1);
             syncFocusBoostToPlayer(player, boostedForSlot(slot), false);
         }
@@ -619,6 +621,7 @@ public final class CaptureManager {
     private static final class PointRuntime {
         private final int slot;
         private final String id;
+        private final ResourceKey<Level> dimension;
         private final AABB aabb;
 
         private PointState state = PointState.IDLE;
@@ -631,14 +634,15 @@ public final class CaptureManager {
         private long nextStepGameTime = 0L;
         private int captureOccupantCount = 0;
 
-        private PointRuntime(int slot, String id, AABB aabb) {
+        private PointRuntime(int slot, String id, ResourceKey<Level> dimension, AABB aabb) {
             this.slot = slot;
             this.id = id;
+            this.dimension = dimension;
             this.aabb = aabb;
         }
 
         static PointRuntime neutral(CapturePointsDefinition.PointDefinition definition) {
-            return new PointRuntime(definition.slot(), definition.id(), definition.toAabb());
+            return new PointRuntime(definition.slot(), definition.id(), definition.dimensionKey(), definition.toAabb());
         }
     }
 }
