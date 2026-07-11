@@ -20,6 +20,10 @@ public final class PvpStatsMutationService {
     }
 
     public static boolean importBundle(PvpStatsSavedData data, UUID uuid, String playerName, String modeId, int wins, int losses, int kills, int deaths, long timestamp) {
+        return importBundle(data, uuid, playerName, modeId, wins, losses, kills, deaths, timestamp, null);
+    }
+
+    public static boolean importBundle(PvpStatsSavedData data, UUID uuid, String playerName, String modeId, int wins, int losses, int kills, int deaths, long timestamp, String matchId) {
         long total = Math.max(0L, wins) + Math.max(0L, losses) + Math.max(0L, kills) + Math.max(0L, deaths);
         if (uuid == null || modeId == null || modeId.isBlank() || total <= 0L) {
             return false;
@@ -31,7 +35,7 @@ public final class PvpStatsMutationService {
         playerStats.getOrCreateMode(modeId).addBundle(wins, losses, kills, deaths);
 
         if ((wins + losses) == 1) {
-            addRecentMatch(playerStats, modeId, wins > 0 ? "WIN" : "LOSS", kills, deaths, timestamp);
+            addRecentMatch(playerStats, matchId, modeId, wins > 0 ? "WIN" : "LOSS", kills, deaths, timestamp);
         }
 
         data.setDirty();
@@ -52,6 +56,10 @@ public final class PvpStatsMutationService {
     }
 
     public static boolean importDraw(PvpStatsSavedData data, UUID uuid, String playerName, String modeId, int kills, int deaths, long timestamp) {
+        return importDraw(data, uuid, playerName, modeId, kills, deaths, timestamp, null);
+    }
+
+    public static boolean importDraw(PvpStatsSavedData data, UUID uuid, String playerName, String modeId, int kills, int deaths, long timestamp, String matchId) {
         if (uuid == null || modeId == null || modeId.isBlank()) {
             return false;
         }
@@ -74,7 +82,7 @@ public final class PvpStatsMutationService {
         modeStats.addKills(kills);
         modeStats.addDeaths(deaths);
 
-        addRecentMatch(playerStats, modeId, "DRAW", kills, deaths, timestamp);
+        addRecentMatch(playerStats, matchId, modeId, "DRAW", kills, deaths, timestamp);
         data.setDirty();
         return true;
     }
@@ -89,10 +97,12 @@ public final class PvpStatsMutationService {
         }
     }
 
-    private static void addRecentMatch(PlayerStats playerStats, String modeId, String result, int kills, int deaths, long timestamp) {
+    private static void addRecentMatch(PlayerStats playerStats, String requestedMatchId, String modeId, String result, int kills, int deaths, long timestamp) {
         long safeTimestamp = timestamp > 0L ? timestamp : System.currentTimeMillis();
-        String matchId = MATCH_ID_FORMATTER.format(Instant.ofEpochMilli(safeTimestamp))
-                + "_" + Integer.toUnsignedString((modeId + result + kills + deaths).hashCode());
+        String matchId = requestedMatchId == null || requestedMatchId.isBlank()
+                ? MATCH_ID_FORMATTER.format(Instant.ofEpochMilli(safeTimestamp))
+                        + "_" + Integer.toUnsignedString((modeId + result + kills + deaths).hashCode())
+                : requestedMatchId;
         playerStats.recentMatches().add(0, new MatchRecord(matchId, modeId, result, kills, deaths, safeTimestamp));
         while (playerStats.recentMatches().size() > MAX_RECENT_MATCHES) {
             playerStats.recentMatches().remove(playerStats.recentMatches().size() - 1);

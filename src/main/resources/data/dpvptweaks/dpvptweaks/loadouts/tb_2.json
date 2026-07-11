@@ -1,0 +1,15 @@
+{
+  "display": {
+    "name": "狙撃兵",
+    "weapons": "SR PI GL",
+    "description": "遠距離で圧をかけつつ、近距離の保険も確保した構成。",
+    "preview_items": [
+      { "type": "tacz_gun", "id": "tacz:ai_awp" },
+      { "type": "tacz_gun", "id": "tacz:uzi" },
+      { "type": "item", "id": "superbwarfare:m18_smoke_grenade" }
+    ]
+  },
+  "apply": {
+    "function": "dpvptweaks:loadouts/tb_2"
+  }
+}

@@ -2,8 +2,11 @@ package com.dousiyo.dpvptweaks.gui;
 
 import com.dousiyo.dpvptweaks.client.ClientLoadoutRegistry;
 import com.dousiyo.dpvptweaks.config.ClientConfig;
+import com.dousiyo.dpvptweaks.loadout.LoadoutDefinition;
 import com.dousiyo.dpvptweaks.network.ClientNetwork;
+import com.dousiyo.dpvptweaks.network.LoadoutGuiNetwork;
 import com.dousiyo.dpvptweaks.network.SelectLoadoutPacket;
+import com.dousiyo.dpvptweaks.network.SelectLoadoutGuiPacket;
 import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
@@ -83,18 +86,23 @@ public class LoadoutScreen extends Screen {
 
     private final List<LoadoutPreview> loadouts;
     private final Map<Integer, String> packetLoadoutIdByPreviewId;
+    private final long sessionId;
     private int currentPage = 0;
     private Integer selectedLoadoutId = null;
 
     public LoadoutScreen() {
-        this(buildDefaultPreviews(), buildDefaultPacketIds());
+        this(buildDefaultPreviews(), buildDefaultPacketIds(), 0L);
     }
 
     public LoadoutScreen(List<LoadoutPreview> loadouts) {
-        this(loadouts, buildSequentialPacketIds(loadouts));
+        this(loadouts, buildSequentialPacketIds(loadouts), 0L);
     }
 
     public LoadoutScreen(List<LoadoutPreview> loadouts, Map<Integer, String> packetLoadoutIdByPreviewId) {
+        this(loadouts, packetLoadoutIdByPreviewId, 0L);
+    }
+
+    public LoadoutScreen(List<LoadoutPreview> loadouts, Map<Integer, String> packetLoadoutIdByPreviewId, long sessionId) {
         super(Component.literal("Loadout Select"));
         String themeFolder = ClientConfig.LOADOUT_THEME_MODE.get().resolveFolder();
         this.panelTex = texture(themeFolder, "loadout_panel.png");
@@ -103,6 +111,7 @@ public class LoadoutScreen extends Screen {
         this.arrowsTex = texture(themeFolder, "page_arrows.png");
         this.loadouts = new ArrayList<>(Objects.requireNonNull(loadouts));
         this.packetLoadoutIdByPreviewId = new LinkedHashMap<>(Objects.requireNonNull(packetLoadoutIdByPreviewId));
+        this.sessionId = sessionId;
     }
 
     private static ResourceLocation texture(String folder, String fileName) {
@@ -320,7 +329,11 @@ public class LoadoutScreen extends Screen {
         if (packetLoadoutId == null || packetLoadoutId.isBlank()) {
             packetLoadoutId = Integer.toString(loadoutId);
         }
-        ClientNetwork.CHANNEL.sendToServer(new SelectLoadoutPacket(packetLoadoutId));
+        if (sessionId > 0L) {
+            LoadoutGuiNetwork.CHANNEL.sendToServer(new SelectLoadoutGuiPacket(sessionId, packetLoadoutId));
+        } else {
+            ClientNetwork.CHANNEL.sendToServer(new SelectLoadoutPacket(packetLoadoutId));
+        }
         this.onClose();
     }
 
@@ -344,11 +357,41 @@ public class LoadoutScreen extends Screen {
         return previews;
     }
 
+    public static List<LoadoutPreview> buildPreviews(List<LoadoutDefinition> definitions) {
+        List<LoadoutPreview> previews = new ArrayList<>();
+        int previewId = 1;
+        for (LoadoutDefinition loadout : definitions) {
+            List<ItemStack> weapons = new ArrayList<>(3);
+            weapons.add(loadout.gunStacks().size() > 0 ? loadout.gunStacks().get(0) : ItemStack.EMPTY);
+            weapons.add(loadout.gunStacks().size() > 1 ? loadout.gunStacks().get(1) : ItemStack.EMPTY);
+            weapons.add(loadout.gunStacks().size() > 2 ? loadout.gunStacks().get(2) : ItemStack.EMPTY);
+            previews.add(new LoadoutPreview(
+                    previewId,
+                    Component.literal(loadout.name()),
+                    weapons,
+                    Component.literal(loadout.weapons()),
+                    Component.literal(loadout.description())
+            ));
+            previewId++;
+        }
+        return previews;
+    }
+
     private static Map<Integer, String> buildDefaultPacketIds() {
         Map<Integer, String> mapping = new LinkedHashMap<>();
         int previewId = 1;
         for (ClientLoadoutRegistry.ClientLoadout loadout : ClientLoadoutRegistry.all().values()) {
             mapping.put(previewId, loadout.id);
+            previewId++;
+        }
+        return mapping;
+    }
+
+    public static Map<Integer, String> buildPacketIds(List<LoadoutDefinition> definitions) {
+        Map<Integer, String> mapping = new LinkedHashMap<>();
+        int previewId = 1;
+        for (LoadoutDefinition loadout : definitions) {
+            mapping.put(previewId, loadout.id());
             previewId++;
         }
         return mapping;

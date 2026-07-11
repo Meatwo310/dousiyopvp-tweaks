@@ -1,0 +1,15 @@
+{
+  "display": {
+    "name": "工兵",
+    "weapons": "DMR PI",
+    "description": "索敵しながら中距離を維持する構成。",
+    "preview_items": [
+      { "type": "tacz_gun", "id": "tacz:qbz_95" },
+      { "type": "tacz_gun", "id": "cib:r8" },
+      { "type": "item", "id": "roughtweaks:medkit" }
+    ]
+  },
+  "apply": {
+    "function": "dpvptweaks:loadouts/tb_mini_6"
+  }
+}

@@ -16,6 +16,8 @@ import java.util.Set;
 import java.util.UUID;
 
 public final class PvpStatsImportService {
+    public static final int DUPLICATE_MATCH = -1;
+
     private PvpStatsImportService() {
     }
 
@@ -75,30 +77,50 @@ public final class PvpStatsImportService {
     }
 
     public static int importMatchResult(ServerLevel level, String modeId, PlayerTeam winnerTeam, PlayerTeam loserTeam, Objective kills, Objective deaths) {
+        return importMatchResult(level, modeId, winnerTeam, loserTeam, kills, deaths, null);
+    }
+
+    public static int importMatchResult(ServerLevel level, String modeId, PlayerTeam winnerTeam, PlayerTeam loserTeam, Objective kills, Objective deaths, String matchId) {
         Scoreboard scoreboard = level.getServer().getScoreboard();
         PvpStatsSavedData savedData = SavedDataAccessor.get(level);
+        if (matchId != null && savedData.hasProcessedMatch(matchId)) {
+            return DUPLICATE_MATCH;
+        }
         MinecraftServer server = level.getServer();
         long timestamp = System.currentTimeMillis();
 
         int imported = 0;
-        imported += importTeamResult(savedData, server, scoreboard, modeId, winnerTeam, true, kills, deaths, timestamp);
-        imported += importTeamResult(savedData, server, scoreboard, modeId, loserTeam, false, kills, deaths, timestamp);
+        imported += importTeamResult(savedData, server, scoreboard, modeId, winnerTeam, true, kills, deaths, timestamp, matchId);
+        imported += importTeamResult(savedData, server, scoreboard, modeId, loserTeam, false, kills, deaths, timestamp, matchId);
+        if (imported > 0 && matchId != null) {
+            savedData.markProcessedMatch(matchId);
+        }
         return imported;
     }
 
     public static int importDrawResult(ServerLevel level, String modeId, PlayerTeam teamA, PlayerTeam teamB, Objective kills, Objective deaths) {
+        return importDrawResult(level, modeId, teamA, teamB, kills, deaths, null);
+    }
+
+    public static int importDrawResult(ServerLevel level, String modeId, PlayerTeam teamA, PlayerTeam teamB, Objective kills, Objective deaths, String matchId) {
         Scoreboard scoreboard = level.getServer().getScoreboard();
         PvpStatsSavedData savedData = SavedDataAccessor.get(level);
+        if (matchId != null && savedData.hasProcessedMatch(matchId)) {
+            return DUPLICATE_MATCH;
+        }
         MinecraftServer server = level.getServer();
         long timestamp = System.currentTimeMillis();
 
         int imported = 0;
-        imported += importTeamDraw(savedData, server, scoreboard, modeId, teamA, kills, deaths, timestamp);
-        imported += importTeamDraw(savedData, server, scoreboard, modeId, teamB, kills, deaths, timestamp);
+        imported += importTeamDraw(savedData, server, scoreboard, modeId, teamA, kills, deaths, timestamp, matchId);
+        imported += importTeamDraw(savedData, server, scoreboard, modeId, teamB, kills, deaths, timestamp, matchId);
+        if (imported > 0 && matchId != null) {
+            savedData.markProcessedMatch(matchId);
+        }
         return imported;
     }
 
-    private static int importTeamResult(PvpStatsSavedData savedData, MinecraftServer server, Scoreboard scoreboard, String modeId, PlayerTeam team, boolean isWinner, Objective kills, Objective deaths, long timestamp) {
+    private static int importTeamResult(PvpStatsSavedData savedData, MinecraftServer server, Scoreboard scoreboard, String modeId, PlayerTeam team, boolean isWinner, Objective kills, Objective deaths, long timestamp, String matchId) {
         if (team == null) {
             return 0;
         }
@@ -122,7 +144,8 @@ public final class PvpStatsImportService {
                     isWinner ? 0 : 1,
                     killValue,
                     deathValue,
-                    timestamp
+                    timestamp,
+                    matchId
             )) {
                 imported++;
             }
@@ -130,7 +153,7 @@ public final class PvpStatsImportService {
         return imported;
     }
 
-    private static int importTeamDraw(PvpStatsSavedData savedData, MinecraftServer server, Scoreboard scoreboard, String modeId, PlayerTeam team, Objective kills, Objective deaths, long timestamp) {
+    private static int importTeamDraw(PvpStatsSavedData savedData, MinecraftServer server, Scoreboard scoreboard, String modeId, PlayerTeam team, Objective kills, Objective deaths, long timestamp, String matchId) {
         if (team == null) {
             return 0;
         }
@@ -152,7 +175,8 @@ public final class PvpStatsImportService {
                     modeId,
                     killValue,
                     deathValue,
-                    timestamp
+                    timestamp,
+                    matchId
             )) {
                 imported++;
             }

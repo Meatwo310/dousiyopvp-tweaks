@@ -1,0 +1,15 @@
+{
+  "display": {
+    "name": "遊撃兵",
+    "weapons": "SMG SG ME",
+    "description": "近距離戦へ素早く切り込むための突入特化セット。",
+    "preview_items": [
+      { "type": "tacz_gun", "id": "tacz:ump45" },
+      { "type": "tacz_gun", "id": "maxstuff:m870t" },
+      { "type": "item", "id": "superbwarfare:lunge_mine" }
+    ]
+  },
+  "apply": {
+    "function": "dpvptweaks:loadouts/tb_3"
+  }
+}

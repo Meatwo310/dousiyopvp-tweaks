@@ -1,0 +1,15 @@
+{
+  "display": {
+    "name": "工兵",
+    "weapons": "AR RPG HC",
+    "description": "爆発物を絡めて高い制圧力を出せる攻撃的セット。",
+    "preview_items": [
+      { "type": "tacz_gun", "id": "tacz:qbz_95" },
+      { "type": "tacz_gun", "id": "tacz:rpg7" },
+      { "type": "tacz_gun", "id": "cib:r8" }
+    ]
+  },
+  "apply": {
+    "function": "dpvptweaks:loadouts/tb_6"
+  }
+}

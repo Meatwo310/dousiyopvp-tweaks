@@ -1,0 +1,15 @@
+{
+  "display": {
+    "name": "強襲兵",
+    "weapons": "UTIL ME",
+    "description": "ユーティリティ重視の柔軟な構成。",
+    "preview_items": [
+      { "type": "tacz_gun", "id": "maxstuff:ak74" },
+      { "type": "tacz_gun", "id": "tacz:m1911" },
+      { "type": "item", "id": "roughtweaks:medkit" }
+    ]
+  },
+  "apply": {
+    "function": "dpvptweaks:loadouts/tb_mini_4"
+  }
+}

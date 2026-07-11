@@ -1,0 +1,15 @@
+{
+  "display": {
+    "name": "偵察兵",
+    "weapons": "AR SMG RPG",
+    "description": "中距離から遠距離まで安定して戦える、バランス重視のロードアウト。",
+    "preview_items": [
+      { "type": "tacz_gun", "id": "maxstuff:sr16" },
+      { "type": "tacz_gun", "id": "cib:js9" },
+      { "type": "item", "id": "superbwarfare:igla_9k38" }
+    ]
+  },
+  "apply": {
+    "function": "dpvptweaks:loadouts/tb_1"
+  }
+}

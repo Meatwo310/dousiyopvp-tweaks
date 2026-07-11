@@ -2,7 +2,8 @@ package com.dousiyo.dpvptweaks.functionpalette;
 
 import java.util.List;
 
-public record FunctionPaletteCategory(String id, String displayName, List<FunctionPaletteAction> actions) {
+/** Kept as the packet menu envelope for source compatibility with the existing feature. */
+public record FunctionPaletteCategory(long revision, List<FunctionPaletteAction> actions) {
     public FunctionPaletteCategory {
         actions = List.copyOf(actions);
     }

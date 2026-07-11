@@ -7,7 +7,7 @@ import net.minecraftforge.network.NetworkRegistry;
 import net.minecraftforge.network.simple.SimpleChannel;
 
 public final class LoadoutGuiNetwork {
-    private static final String PROTOCOL_VERSION = "1";
+    private static final String PROTOCOL_VERSION = "2";
     private static boolean registered;
     private static int packetId;
 
@@ -43,6 +43,36 @@ public final class LoadoutGuiNetwork {
                 .encoder(CloseLoadoutGuiPacket::encode)
                 .decoder(CloseLoadoutGuiPacket::decode)
                 .consumerMainThread(CloseLoadoutGuiPacket::handle)
+                .add();
+
+        CHANNEL.messageBuilder(OpenIntelDraftGuiPacket.class, packetId++, NetworkDirection.PLAY_TO_CLIENT)
+                .encoder(OpenIntelDraftGuiPacket::encode)
+                .decoder(OpenIntelDraftGuiPacket::decode)
+                .consumerMainThread(OpenIntelDraftGuiPacket::handle)
+                .add();
+
+        CHANNEL.messageBuilder(CloseIntelDraftGuiPacket.class, packetId++, NetworkDirection.PLAY_TO_CLIENT)
+                .encoder(CloseIntelDraftGuiPacket::encode)
+                .decoder(CloseIntelDraftGuiPacket::decode)
+                .consumerMainThread(CloseIntelDraftGuiPacket::handle)
+                .add();
+
+        CHANNEL.messageBuilder(RerollIntelDraftPacket.class, packetId++, NetworkDirection.PLAY_TO_SERVER)
+                .encoder(RerollIntelDraftPacket::encode)
+                .decoder(RerollIntelDraftPacket::decode)
+                .consumerMainThread(RerollIntelDraftPacket::handle)
+                .add();
+
+        CHANNEL.messageBuilder(SelectIntelDraftPacket.class, packetId++, NetworkDirection.PLAY_TO_SERVER)
+                .encoder(SelectIntelDraftPacket::encode)
+                .decoder(SelectIntelDraftPacket::decode)
+                .consumerMainThread(SelectIntelDraftPacket::handle)
+                .add();
+
+        CHANNEL.messageBuilder(SelectLoadoutGuiPacket.class, packetId++, NetworkDirection.PLAY_TO_SERVER)
+                .encoder(SelectLoadoutGuiPacket::encode)
+                .decoder(SelectLoadoutGuiPacket::decode)
+                .consumerMainThread(SelectLoadoutGuiPacket::handle)
                 .add();
 
         DpvpTweaks.LOGGER.info("[{}] Loadout GUI network packets registered", DpvpTweaks.MOD_NAME);

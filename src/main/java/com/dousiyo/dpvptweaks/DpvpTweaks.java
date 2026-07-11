@@ -13,6 +13,8 @@ import com.dousiyo.dpvptweaks.network.FunctionPaletteNetwork;
 import com.dousiyo.dpvptweaks.network.LoadoutGuiNetwork;
 import com.dousiyo.dpvptweaks.pvpstats.network.PvpStatsNetwork;
 import com.dousiyo.dpvptweaks.server.function.FunctionPaletteServerConfig;
+import com.dousiyo.dpvptweaks.timer.config.TimerClientConfig;
+import com.dousiyo.dpvptweaks.timer.network.ModNetwork;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.common.Mod;
@@ -59,10 +61,12 @@ public class DpvpTweaks {
         LoadoutGuiNetwork.register();
         FunctionPaletteNetwork.register();
         PvpStatsNetwork.register();
+        ModNetwork.register();
 
         context.registerConfig(ModConfig.Type.SERVER, ServerConfig.SPEC);
         context.registerConfig(ModConfig.Type.SERVER, FunctionPaletteServerConfig.SPEC, MODID + "-function_palette-server.toml");
         context.registerConfig(ModConfig.Type.CLIENT, ClientConfig.SPEC);
+        context.registerConfig(ModConfig.Type.CLIENT, TimerClientConfig.SPEC, MODID + "-timer-client.toml");
     }
 
     private static void registerFallbackDousiyoServerMainReceiver() {

@@ -1,6 +1,7 @@
 package com.dousiyo.dpvptweaks.gui;
 
 import com.dousiyo.dpvptweaks.client.ClientMiniLoadoutRegistry;
+import com.dousiyo.dpvptweaks.loadout.LoadoutDefinition;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 
@@ -12,6 +13,14 @@ import java.util.Map;
 public class MiniLoadoutScreen extends LoadoutScreen {
     public MiniLoadoutScreen() {
         super(buildPreviews(), buildPacketIds());
+    }
+
+    public MiniLoadoutScreen(List<LoadoutDefinition> loadouts) {
+        this(loadouts, 0L);
+    }
+
+    public MiniLoadoutScreen(List<LoadoutDefinition> loadouts, long sessionId) {
+        super(LoadoutScreen.buildPreviews(loadouts), LoadoutScreen.buildPacketIds(loadouts), sessionId);
     }
 
     private static List<LoadoutPreview> buildPreviews() {

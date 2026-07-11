@@ -1,173 +1,58 @@
 package com.dousiyo.dpvptweaks.client.function.screen;
 
-import com.dousiyo.dpvptweaks.config.ClientConfig;
-import com.dousiyo.dpvptweaks.functionpalette.FunctionPaletteAction;
-import com.dousiyo.dpvptweaks.functionpalette.FunctionPaletteCategory;
+import com.dousiyo.dpvptweaks.functionpalette.*;
 import com.dousiyo.dpvptweaks.network.FunctionPaletteNetwork;
-import com.dousiyo.dpvptweaks.network.functionpalette.c2s.RequestFunctionListPacket;
-import com.dousiyo.dpvptweaks.network.functionpalette.c2s.RunFunctionPacket;
+import com.dousiyo.dpvptweaks.network.functionpalette.c2s.*;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.*;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import java.util.*;
 
-import java.util.ArrayList;
-import java.util.List;
+public final class FunctionPaletteScreen extends Screen {
+    private static final int ROW_HEIGHT=36, ROW_GAP=4;
+    private List<FunctionPaletteAction> actions=List.of();
+    private long revision; private boolean loading=true; private int scroll;
+    public FunctionPaletteScreen(){ super(Component.translatable("gui.dpvptweaks.function_palette.title")); }
+    @Override protected void init(){ rebuild(); FunctionPaletteNetwork.CHANNEL.sendToServer(new RequestFunctionListPacket()); }
+    public void applyPaletteData(FunctionPaletteCategory data){ revision=data.revision(); actions=data.actions(); loading=false; scroll=0; rebuild(); }
+    private void rebuild(){ clearWidgets(); int visible=Math.max(1,(height-90)/(ROW_HEIGHT+ROW_GAP)); scroll=Math.max(0,Math.min(scroll,Math.max(0,actions.size()-visible)));
+        for(int i=0;i<visible && i+scroll<actions.size();i++){ var action=actions.get(i+scroll); addRenderableWidget(new ActionButton(width/2-150,38+i*(ROW_HEIGHT+ROW_GAP),300,ROW_HEIGHT,action)); }
+        addRenderableWidget(Button.builder(Component.translatable("gui.dpvptweaks.function_palette.close"),b->onClose()).bounds(width/2-50,height-28,100,20).build());
+    }
+    private void select(FunctionPaletteAction action){
+        if(!action.confirmation()){ execute(action); return; }
+        minecraft.setScreen(new ConfirmFunctionScreen(this,action));
+    }
+    private void execute(FunctionPaletteAction action){ FunctionPaletteNetwork.CHANNEL.sendToServer(new RunFunctionPacket(action.id(),revision)); }
+    @Override public boolean mouseScrolled(double x,double y,double delta){ if(delta!=0){ scroll+=(delta<0?1:-1); rebuild(); return true; } return super.mouseScrolled(x,y,delta); }
+    @Override public void render(GuiGraphics g,int mx,int my,float pt){ renderBackground(g); g.drawCenteredString(font,title,width/2,15,0xffffff);
+        if(loading) g.drawCenteredString(font,Component.translatable("gui.dpvptweaks.function_palette.status.loading"),width/2,height/2,0xaaaaaa);
+        else if(actions.isEmpty()) g.drawCenteredString(font,Component.translatable("gui.dpvptweaks.function_palette.menu_empty"),width/2,height/2,0xaaaaaa);
+        super.render(g,mx,my,pt); }
+    @Override public boolean isPauseScreen(){ return false; }
 
-public class FunctionPaletteScreen extends Screen {
-    private static final int BUTTON_WIDTH = 220;
-    private static final int BUTTON_HEIGHT = 20;
-    private static final int BUTTON_GAP = 6;
-
-    private final List<FunctionPaletteCategory> categories = new ArrayList<>();
-    private final List<Button> pageButtons = new ArrayList<>();
-
-    private Button refreshButton;
-    private Button backButton;
-    private FunctionPaletteCategory activeCategory;
-    private boolean loading = true;
-    private boolean requestedList;
-
-    public FunctionPaletteScreen() {
-        super(Component.translatable("gui.dpvptweaks.function_palette.title"));
+    private final class ActionButton extends AbstractButton {
+        private final FunctionPaletteAction action;
+        ActionButton(int x,int y,int w,int h,FunctionPaletteAction a){ super(x,y,w,h,Component.literal(a.name())); action=a; }
+        @Override public void onPress(){ select(action); }
+        @Override protected void renderWidget(GuiGraphics g,int mx,int my,float pt){ super.renderWidget(g,mx,my,pt); ResourceLocation id=ResourceLocation.tryParse(action.icon());
+            var item=id==null?Items.COMMAND_BLOCK:BuiltInRegistries.ITEM.get(id); if(item==Items.AIR)item=Items.COMMAND_BLOCK; g.renderItem(new ItemStack(item),getX()+7,getY()+10);
+            g.drawString(font,action.name(),getX()+29,getY()+7,0xffffff,false); String desc=font.plainSubstrByWidth(action.description(),getWidth()-38); g.drawString(font,desc,getX()+29,getY()+21,0xaaaaaa,false); }
+        @Override protected void updateWidgetNarration(net.minecraft.client.gui.narration.NarrationElementOutput out){ defaultButtonNarrationText(out); }
     }
 
-    @Override
-    protected void init() {
-        super.init();
-        rebuildWidgets();
-
-        if (!requestedList) {
-            requestedList = true;
-            requestFunctionList();
-        }
-    }
-
-    @Override
-    public boolean isPauseScreen() {
-        return false;
-    }
-
-    @Override
-    protected void rebuildWidgets() {
-        clearWidgets();
-        pageButtons.clear();
-
-        int centerX = this.width / 2;
-        int top = topY();
-
-        this.refreshButton = addRenderableWidget(Button.builder(
-                        Component.translatable("gui.dpvptweaks.function_palette.refresh"),
-                        button -> requestFunctionList()
-                )
-                .bounds(centerX + 48, top, 84, BUTTON_HEIGHT)
-                .build());
-
-        if (activeCategory != null) {
-            this.backButton = addRenderableWidget(Button.builder(
-                            Component.translatable("gui.dpvptweaks.function_palette.back"),
-                            button -> openMainPage()
-                    )
-                    .bounds(centerX - 132, top, 84, BUTTON_HEIGHT)
-                    .build());
-        } else {
-            this.backButton = null;
-        }
-
-        List<ButtonSpec> specs = currentButtonSpecs();
-        int totalHeight = specs.size() * BUTTON_HEIGHT + Math.max(0, specs.size() - 1) * BUTTON_GAP;
-        int startY = top + 42 + Math.max(0, (176 - totalHeight) / 2);
-
-        for (int i = 0; i < specs.size(); i++) {
-            ButtonSpec spec = specs.get(i);
-            Button button = addRenderableWidget(Button.builder(spec.label(), clicked -> spec.onClick().run())
-                    .bounds(centerX - BUTTON_WIDTH / 2, startY + i * (BUTTON_HEIGHT + BUTTON_GAP), BUTTON_WIDTH, BUTTON_HEIGHT)
-                    .build());
-            pageButtons.add(button);
-        }
-    }
-
-    @Override
-    public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
-        this.renderBackground(guiGraphics);
-
-        int centerX = this.width / 2;
-        int top = topY();
-        guiGraphics.drawCenteredString(this.font, this.title, centerX, top - 20, 0xFFFFFF);
-        guiGraphics.drawCenteredString(this.font, currentSubtitle(), centerX, top - 8, 0xA0A0A0);
-
-        if (loading) {
-            guiGraphics.drawCenteredString(this.font, Component.translatable("gui.dpvptweaks.function_palette.status.loading"), centerX, top + 26, 0xA0A0A0);
-        } else if (pageButtons.isEmpty()) {
-            guiGraphics.drawCenteredString(this.font, Component.translatable("gui.dpvptweaks.function_palette.menu_empty"), centerX, top + 26, 0xA0A0A0);
-        }
-
-        super.render(guiGraphics, mouseX, mouseY, partialTick);
-    }
-
-    public void applyPaletteData(List<FunctionPaletteCategory> categories) {
-        this.loading = false;
-        this.categories.clear();
-        this.categories.addAll(categories);
-
-        if (activeCategory != null) {
-            activeCategory = this.categories.stream()
-                    .filter(category -> category.id().equals(activeCategory.id()))
-                    .findFirst()
-                    .orElse(null);
-        }
-
-        rebuildWidgets();
-    }
-
-    private void requestFunctionList() {
-        this.loading = true;
-        FunctionPaletteNetwork.CHANNEL.sendToServer(new RequestFunctionListPacket());
-    }
-
-    private void openMainPage() {
-        this.activeCategory = null;
-        rebuildWidgets();
-    }
-
-    private void openCategory(FunctionPaletteCategory category) {
-        this.activeCategory = category;
-        rebuildWidgets();
-    }
-
-    private void runAction(FunctionPaletteAction action) {
-        FunctionPaletteNetwork.CHANNEL.sendToServer(new RunFunctionPacket(action.functionId()));
-        if (ClientConfig.FUNCTION_PALETTE_CLOSE_AFTER_RUN.get()) {
-            this.onClose();
-        }
-    }
-
-    private List<ButtonSpec> currentButtonSpecs() {
-        List<ButtonSpec> specs = new ArrayList<>();
-        if (activeCategory == null) {
-            for (FunctionPaletteCategory category : categories) {
-                specs.add(new ButtonSpec(Component.literal(category.displayName()), () -> openCategory(category)));
-            }
-            return specs;
-        }
-
-        for (FunctionPaletteAction action : activeCategory.actions()) {
-            specs.add(new ButtonSpec(Component.literal(action.label()), () -> runAction(action)));
-        }
-        return specs;
-    }
-
-    private Component currentSubtitle() {
-        if (activeCategory == null) {
-            return Component.translatable("gui.dpvptweaks.function_palette.menu_heading");
-        }
-        return Component.translatable("gui.dpvptweaks.function_palette.category_title", activeCategory.displayName());
-    }
-
-    private int topY() {
-        return (this.height - 220) / 2;
-    }
-
-    private record ButtonSpec(Component label, Runnable onClick) {
+    private static final class ConfirmFunctionScreen extends Screen {
+        private final FunctionPaletteScreen parent; private final FunctionPaletteAction action;
+        ConfirmFunctionScreen(FunctionPaletteScreen parent,FunctionPaletteAction action){ super(Component.translatable("gui.dpvptweaks.function_palette.confirm_title")); this.parent=parent; this.action=action; }
+        @Override protected void init(){ addRenderableWidget(Button.builder(Component.translatable("gui.dpvptweaks.function_palette.execute"),b->{ parent.execute(action); minecraft.setScreen(parent); }).bounds(width/2-105,height/2+35,100,20).build());
+            addRenderableWidget(Button.builder(Component.translatable("gui.dpvptweaks.function_palette.cancel"),b->minecraft.setScreen(parent)).bounds(width/2+5,height/2+35,100,20).build()); }
+        @Override public void render(GuiGraphics g,int mx,int my,float pt){ renderBackground(g); g.drawCenteredString(font,title,width/2,height/2-45,0xffffff); g.drawCenteredString(font,action.name(),width/2,height/2-20,0xffffff);
+            g.drawCenteredString(font,font.plainSubstrByWidth(action.description(),Math.min(360,width-30)),width/2,height/2,0xaaaaaa); super.render(g,mx,my,pt); }
+        @Override public void onClose(){ minecraft.setScreen(parent); } @Override public boolean isPauseScreen(){ return false; }
     }
 }

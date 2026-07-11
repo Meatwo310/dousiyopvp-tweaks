@@ -1,0 +1,62 @@
+{
+  "rerollCount": 1,
+  "techs": [
+    {
+      "id": 1,
+      "name": "スピードリロード",
+      "description": "全ての武器のリロード速度アップ",
+      "iconItem": "minecraft:sugar"
+    },
+    {
+      "id": 2,
+      "name": "ガンスミス",
+      "description": "全ての武器をより高いレア度にアップグレードする",
+      "iconItem": "minecraft:smithing_table"
+    },
+    {
+      "id": 3,
+      "name": "パワーフィッシュ",
+      "description": "泳ぎが速くなる",
+      "iconItem": "minecraft:cod"
+    },
+    {
+      "id": 4,
+      "name": "フィールドメディック",
+      "description": "味方を支援しやすい回復技術",
+      "iconItem": "minecraft:golden_apple"
+    },
+    {
+      "id": 5,
+      "name": "リコン",
+      "description": "敵の位置を把握しやすくなる索敵技術",
+      "iconItem": "minecraft:compass"
+    }
+  ],
+  "guns": [
+    {
+      "id": 1,
+      "name": "スターターサブマシンガン",
+      "item": "maxstuff:sr16"
+    },
+    {
+      "id": 2,
+      "name": "スターターポンプショットガン",
+      "item": "maxstuff:m870t"
+    },
+    {
+      "id": 3,
+      "name": "地雷",
+      "item": "minecraft:heavy_weighted_pressure_plate"
+    },
+    {
+      "id": 4,
+      "name": "スタータースナイパー",
+      "item": "tacz:ai_awp"
+    },
+    {
+      "id": 5,
+      "name": "スターターライフル",
+      "item": "maxstuff:ak74"
+    }
+  ]
+}

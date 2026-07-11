@@ -1,0 +1,11 @@
+{
+  "display": {
+    "name": "Default",
+    "weapons": "",
+    "description": "選択情報がない場合に使用される予備ロードアウト。",
+    "preview_items": []
+  },
+  "apply": {
+    "function": "dpvptweaks:loadouts/tb_default"
+  }
+}

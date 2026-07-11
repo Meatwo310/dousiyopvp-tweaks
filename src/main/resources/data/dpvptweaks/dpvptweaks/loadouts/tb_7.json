@@ -1,0 +1,15 @@
+{
+  "display": {
+    "name": "援護兵",
+    "weapons": "LMG PI RPG",
+    "description": "対装甲を重視した、ユーティリティ寄りの編成。",
+    "preview_items": [
+      { "type": "tacz_gun", "id": "tacz:m249" },
+      { "type": "tacz_gun", "id": "maxstuff:m17" },
+      { "type": "item", "id": "superbwarfare:javelin" }
+    ]
+  },
+  "apply": {
+    "function": "dpvptweaks:loadouts/tb_7"
+  }
+}

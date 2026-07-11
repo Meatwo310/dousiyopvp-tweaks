@@ -6,6 +6,7 @@ import com.dousiyo.dpvptweaks.pvpstats.model.StatsGuiPayload;
 import com.dousiyo.dpvptweaks.pvpstats.network.PvpStatsNetwork;
 import com.dousiyo.dpvptweaks.pvpstats.network.s2c.OpenStatsGuiPacket;
 import com.dousiyo.dpvptweaks.pvpstats.service.ModeIdService;
+import com.dousiyo.dpvptweaks.pvpstats.service.MatchIdService;
 import com.dousiyo.dpvptweaks.pvpstats.service.PvpStatsImportService;
 import com.dousiyo.dpvptweaks.pvpstats.service.PvpStatsQueryService;
 import com.dousiyo.dpvptweaks.pvpstats.util.SavedDataAccessor;
@@ -64,7 +65,8 @@ public final class PvpStatsCommand {
                                         .then(Commands.argument("loser_team", TeamArgument.team())
                                                 .then(Commands.argument("kills_obj", ObjectiveArgument.objective())
                                                         .then(Commands.argument("deaths_obj", ObjectiveArgument.objective())
-                                                                .executes(PvpStatsCommand::importMatch)))))))
+                                                                .then(Commands.argument("match_id", StringArgumentType.word())
+                                                                        .executes(PvpStatsCommand::importMatchWithId))))))))
                 .then(Commands.literal("import_draw")
                         .requires(source -> source.hasPermission(2))
                         .then(Commands.argument("mode_id", StringArgumentType.word())
@@ -72,7 +74,8 @@ public final class PvpStatsCommand {
                                         .then(Commands.argument("team_b", TeamArgument.team())
                                                 .then(Commands.argument("kills_obj", ObjectiveArgument.objective())
                                                         .then(Commands.argument("deaths_obj", ObjectiveArgument.objective())
-                                                                .executes(PvpStatsCommand::importDraw)))))))
+                                                                .then(Commands.argument("match_id", StringArgumentType.word())
+                                                                        .executes(PvpStatsCommand::importDrawWithId))))))))
                 .then(Commands.literal("import_objective")
                         .requires(source -> source.hasPermission(2))
                         .then(Commands.argument("objective", ObjectiveArgument.objective())
@@ -123,6 +126,19 @@ public final class PvpStatsCommand {
     }
 
     private static int importMatch(CommandContext<CommandSourceStack> ctx) throws com.mojang.brigadier.exceptions.CommandSyntaxException {
+        return importMatch(ctx, null);
+    }
+
+    private static int importMatchWithId(CommandContext<CommandSourceStack> ctx) throws com.mojang.brigadier.exceptions.CommandSyntaxException {
+        String rawMatchId = StringArgumentType.getString(ctx, "match_id");
+        if (!MatchIdService.isValid(rawMatchId)) {
+            ctx.getSource().sendFailure(Component.literal("match_id が不正です"));
+            return 0;
+        }
+        return importMatch(ctx, MatchIdService.normalize(rawMatchId));
+    }
+
+    private static int importMatch(CommandContext<CommandSourceStack> ctx, String matchId) throws com.mojang.brigadier.exceptions.CommandSyntaxException {
         String modeId = StringArgumentType.getString(ctx, "mode_id");
         if (!ModeIdService.isValid(modeId)) {
             ctx.getSource().sendFailure(Component.literal("mode_id が不正です"));
@@ -140,18 +156,38 @@ public final class PvpStatsCommand {
                 winnerTeam,
                 loserTeam,
                 killsObjective,
-                deathsObjective
+                deathsObjective,
+                matchId
         );
+
+        if (imported == PvpStatsImportService.DUPLICATE_MATCH) {
+            ctx.getSource().sendFailure(Component.literal("登録済みの match_id です: " + matchId));
+            return 0;
+        }
 
         ctx.getSource().sendSuccess(() -> Component.literal(
                 "試合結果を " + imported + " 件取り込みました"
                         + " (winner=" + winnerTeam.getName()
-                        + ", loser=" + loserTeam.getName() + ")"
+                        + ", loser=" + loserTeam.getName()
+                        + (matchId == null ? "" : ", match_id=" + matchId) + ")"
         ), true);
         return imported > 0 ? Command.SINGLE_SUCCESS : 0;
     }
 
     private static int importDraw(CommandContext<CommandSourceStack> ctx) throws com.mojang.brigadier.exceptions.CommandSyntaxException {
+        return importDraw(ctx, null);
+    }
+
+    private static int importDrawWithId(CommandContext<CommandSourceStack> ctx) throws com.mojang.brigadier.exceptions.CommandSyntaxException {
+        String rawMatchId = StringArgumentType.getString(ctx, "match_id");
+        if (!MatchIdService.isValid(rawMatchId)) {
+            ctx.getSource().sendFailure(Component.literal("match_id が不正です"));
+            return 0;
+        }
+        return importDraw(ctx, MatchIdService.normalize(rawMatchId));
+    }
+
+    private static int importDraw(CommandContext<CommandSourceStack> ctx, String matchId) throws com.mojang.brigadier.exceptions.CommandSyntaxException {
         String modeId = StringArgumentType.getString(ctx, "mode_id");
         if (!ModeIdService.isValid(modeId)) {
             ctx.getSource().sendFailure(Component.literal("mode_id が不正です"));
@@ -169,13 +205,20 @@ public final class PvpStatsCommand {
                 teamA,
                 teamB,
                 killsObjective,
-                deathsObjective
+                deathsObjective,
+                matchId
         );
+
+        if (imported == PvpStatsImportService.DUPLICATE_MATCH) {
+            ctx.getSource().sendFailure(Component.literal("登録済みの match_id です: " + matchId));
+            return 0;
+        }
 
         ctx.getSource().sendSuccess(() -> Component.literal(
                 "引き分け結果を " + imported + " 件取り込みました"
                         + " (teamA=" + teamA.getName()
-                        + ", teamB=" + teamB.getName() + ")"
+                        + ", teamB=" + teamB.getName()
+                        + (matchId == null ? "" : ", match_id=" + matchId) + ")"
         ), true);
         return imported > 0 ? Command.SINGLE_SUCCESS : 0;
     }
@@ -211,7 +254,7 @@ public final class PvpStatsCommand {
     }
 
     private static void openStatsScreen(ServerPlayer viewer, java.util.UUID targetUuid, String fallbackName) {
-        StatsGuiPayload payload = PvpStatsQueryService.query(viewer.serverLevel(), targetUuid, fallbackName);
+        StatsGuiPayload payload = PvpStatsQueryService.query(viewer.serverLevel(), viewer.getUUID(), targetUuid, fallbackName);
         PvpStatsNetwork.CHANNEL.send(PacketDistributor.PLAYER.with(() -> viewer), new OpenStatsGuiPacket(payload));
     }
 }

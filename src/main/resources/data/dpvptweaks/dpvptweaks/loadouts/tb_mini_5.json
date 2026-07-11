@@ -1,0 +1,15 @@
+{
+  "display": {
+    "name": "遊撃兵",
+    "weapons": "SG PI",
+    "description": "近距離の迎撃に強い防衛構成。",
+    "preview_items": [
+      { "type": "tacz_gun", "id": "maxstuff:aug_a2" },
+      { "type": "tacz_gun", "id": "cib:686" },
+      { "type": "item", "id": "roughtweaks:medkit" }
+    ]
+  },
+  "apply": {
+    "function": "dpvptweaks:loadouts/tb_mini_5"
+  }
+}

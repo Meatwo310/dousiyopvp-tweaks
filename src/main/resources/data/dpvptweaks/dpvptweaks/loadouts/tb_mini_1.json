@@ -1,0 +1,15 @@
+{
+  "display": {
+    "name": "偵察兵",
+    "weapons": "AR PI",
+    "description": "軽量で扱いやすい前線向け構成。",
+    "preview_items": [
+      { "type": "tacz_gun", "id": "maxstuff:sr16" },
+      { "type": "tacz_gun", "id": "cib:js9" },
+      { "type": "item", "id": "roughtweaks:medkit" }
+    ]
+  },
+  "apply": {
+    "function": "dpvptweaks:loadouts/tb_mini_1"
+  }
+}

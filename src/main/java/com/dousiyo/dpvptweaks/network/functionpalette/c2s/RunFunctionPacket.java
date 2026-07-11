@@ -1,44 +1,22 @@
 package com.dousiyo.dpvptweaks.network.functionpalette.c2s;
 
+import com.dousiyo.dpvptweaks.network.FunctionPaletteNetwork;
+import com.dousiyo.dpvptweaks.network.functionpalette.s2c.FunctionResultPacket;
 import com.dousiyo.dpvptweaks.server.function.FunctionService;
-import com.dousiyo.dpvptweaks.server.function.FunctionPaletteServerConfig;
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.network.NetworkEvent;
-
+import net.minecraftforge.network.PacketDistributor;
 import java.util.function.Supplier;
 
-public final class RunFunctionPacket {
-    private static final int MAX_ID_LENGTH = 512;
-
-    private final String functionId;
-
-    public RunFunctionPacket(String functionId) {
-        this.functionId = functionId;
-    }
-
-    public static void encode(RunFunctionPacket packet, FriendlyByteBuf buf) {
-        buf.writeUtf(packet.functionId, MAX_ID_LENGTH);
-    }
-
-    public static RunFunctionPacket decode(FriendlyByteBuf buf) {
-        return new RunFunctionPacket(buf.readUtf(MAX_ID_LENGTH));
-    }
-
-    public static void handle(RunFunctionPacket packet, Supplier<NetworkEvent.Context> ctx) {
-        NetworkEvent.Context context = ctx.get();
-        ServerPlayer player = context.getSender();
-        if (player == null) {
-            context.setPacketHandled(true);
-            return;
-        }
-
-        context.enqueueWork(() -> {
-            FunctionService.RunResult result = FunctionService.runFunction(player, packet.functionId);
-            if (!result.success() || FunctionPaletteServerConfig.SHOW_RUN_RESULT.get()) {
-                player.sendSystemMessage(result.message());
-            }
+public record RunFunctionPacket(String buttonId, long revision) {
+    public static void encode(RunFunctionPacket p, FriendlyByteBuf b) { b.writeUtf(p.buttonId, 64); b.writeLong(p.revision); }
+    public static RunFunctionPacket decode(FriendlyByteBuf b) { return new RunFunctionPacket(b.readUtf(64), b.readLong()); }
+    public static void handle(RunFunctionPacket p, Supplier<NetworkEvent.Context> supplier) {
+        var ctx = supplier.get(); var player = ctx.getSender();
+        if (player != null) ctx.enqueueWork(() -> {
+            var result = FunctionService.runButton(player, p.buttonId, p.revision);
+            FunctionPaletteNetwork.CHANNEL.send(PacketDistributor.PLAYER.with(() -> player), new FunctionResultPacket(result.success(), result.message()));
         });
-        context.setPacketHandled(true);
+        ctx.setPacketHandled(true);
     }
 }

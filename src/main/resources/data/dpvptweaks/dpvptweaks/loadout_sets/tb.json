@@ -1,0 +1,15 @@
+{
+  "title": "TB",
+  "layout": "normal",
+  "loadouts": [
+    "tb_1",
+    "tb_2",
+    "tb_3",
+    "tb_4",
+    "tb_5",
+    "tb_6",
+    "tb_7",
+    "tb_8",
+    "tb_default"
+  ]
+}

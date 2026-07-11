@@ -1,0 +1,11 @@
+{
+  "mode_id": "test",
+  "display_name": "test",
+  "translation_key": "pvp_mode.dpvptweaks.test",
+  "description_translation_key": "pvp_mode.dpvptweaks.test.description",
+  "sort_order": 50,
+  "tags": ["test"],
+  "ranking": {
+    "enabled": false
+  }
+}

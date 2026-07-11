@@ -14,7 +14,7 @@ public final class FunctionPermissionService {
     }
 
     public static int requiredPermissionLevel() {
-        return FunctionPaletteServerConfig.REQUIRED_PERMISSION_LEVEL.get();
+        return Math.max(2, FunctionPaletteServerConfig.REQUIRED_PERMISSION_LEVEL.get());
     }
 
     public static boolean canUse(ServerPlayer player) {

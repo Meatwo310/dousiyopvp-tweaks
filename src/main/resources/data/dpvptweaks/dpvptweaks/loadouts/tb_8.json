@@ -1,0 +1,15 @@
+{
+  "display": {
+    "name": "支援射撃兵",
+    "weapons": "DMR SMG PI",
+    "description": "中遠距離で安定して圧をかけ続けられる構成。",
+    "preview_items": [
+      { "type": "tacz_gun", "id": "maxstuff:dragonuv_svd" },
+      { "type": "tacz_gun", "id": "maxstuff:udp9" },
+      { "type": "tacz_gun", "id": "tacz:m320" }
+    ]
+  },
+  "apply": {
+    "function": "dpvptweaks:loadouts/tb_8"
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "display": {
+    "name": "遊撃兵",
+    "weapons": "LMG PI",
+    "description": "弾幕を意識した制圧寄りの構成。",
+    "preview_items": [
+      { "type": "tacz_gun", "id": "maxstuff:ump9" },
+      { "type": "tacz_gun", "id": "maxstuff:m870t" },
+      { "type": "item", "id": "roughtweaks:medkit" }
+    ]
+  },
+  "apply": {
+    "function": "dpvptweaks:loadouts/tb_mini_3"
+  }
+}

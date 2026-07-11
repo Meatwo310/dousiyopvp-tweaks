@@ -1,0 +1,15 @@
+{
+  "display": {
+    "name": "狙撃兵",
+    "weapons": "SR PI",
+    "description": "後方から援護しやすい安定構成。",
+    "preview_items": [
+      { "type": "tacz_gun", "id": "tacz:ai_awp" },
+      { "type": "tacz_gun", "id": "tacz:uzi" },
+      { "type": "item", "id": "roughtweaks:medkit" }
+    ]
+  },
+  "apply": {
+    "function": "dpvptweaks:loadouts/tb_mini_2"
+  }
+}

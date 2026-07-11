@@ -1,0 +1,99 @@
+{
+  "loadouts": [
+    {
+      "id": "tb_1",
+      "name": "偵察兵",
+      "weapons": "AR SMG RPG",
+      "description": "中距離から遠距離まで安定して戦える、バランス重視のロードアウト。",
+      "items": [
+        "maxstuff:sr16",
+        "cib:js9",
+        "superbwarfare:igla_9k38"
+      ]
+    },
+    {
+      "id": "tb_2",
+      "name": "狙撃兵",
+      "weapons": "SR PI GL",
+      "description": "遠距離で圧をかけつつ、近距離の保険も確保した構成。",
+      "items": [
+        "tacz:ai_awp",
+        "tacz:uzi",
+        "superbwarfare:m18_smoke_grenade"
+      ]
+    },
+    {
+      "id": "tb_3",
+      "name": "遊撃兵",
+      "weapons": "SMG SG ME",
+      "description": "近距離戦へ素早く切り込むための突入特化セット。",
+      "items": [
+        "tacz:ump45",
+        "maxstuff:m870t",
+        "superbwarfare:lunge_mine"
+      ]
+    },
+    {
+      "id": "tb_4",
+      "name": "強襲兵",
+      "weapons": "AR PI RPG",
+      "description": "前線で制圧しやすい、エリア拒否向けの構成。",
+      "items": [
+        "maxstuff:ak74",
+        "tacz:m1911",
+        "superbwarfare:rgo_grenade"
+      ]
+    },
+    {
+      "id": "tb_5",
+      "name": "遊撃兵",
+      "weapons": "AR SG ME",
+      "description": "機動力を保ちつつ、補助と継戦能力を両立した支援型。",
+      "items": [
+        "maxstuff:aug_a2",
+        "cib:686",
+        "superbwarfare:repair_tool"
+      ]
+    },
+    {
+      "id": "tb_6",
+      "name": "工兵",
+      "weapons": "AR RPG HC",
+      "description": "爆発物を絡めて高い制圧力を出せる攻撃的セット。",
+      "items": [
+        "tacz:qbz_95",
+        "tacz:rpg7",
+        "cib:r8"
+      ]
+    },
+    {
+      "id": "tb_7",
+      "name": "援護兵",
+      "weapons": "LMG PI RPG",
+      "description": "対装甲を重視した、ユーティリティ寄りの編成。",
+      "items": [
+        "tacz:m249",
+        "maxstuff:m17",
+        "superbwarfare:javelin"
+      ]
+    },
+    {
+      "id": "tb_8",
+      "name": "支援射撃兵",
+      "weapons": "DMR SMG PI",
+      "description": "中遠距離で安定して圧をかけ続けられる構成。",
+      "items": [
+        "maxstuff:dragonuv_svd",
+        "maxstuff:udp9",
+        "tacz:m320"
+      ]
+    },
+    {
+      "id": "tb_default",
+      "name": "Default",
+      "weapons": "",
+      "description": "選択情報がない場合に使用される予備ロードアウト。",
+      "items": []
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "display": {
+    "name": "強襲兵",
+    "weapons": "AR PI RPG",
+    "description": "前線で制圧しやすい、エリア拒否向けの構成。",
+    "preview_items": [
+      { "type": "tacz_gun", "id": "maxstuff:ak74" },
+      { "type": "tacz_gun", "id": "tacz:m1911" },
+      { "type": "item", "id": "superbwarfare:rgo_grenade" }
+    ]
+  },
+  "apply": {
+    "function": "dpvptweaks:loadouts/tb_4"
+  }
+}

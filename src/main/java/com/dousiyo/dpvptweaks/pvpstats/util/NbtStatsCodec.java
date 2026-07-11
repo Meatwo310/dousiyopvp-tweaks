@@ -3,6 +3,8 @@ package com.dousiyo.dpvptweaks.pvpstats.util;
 import com.dousiyo.dpvptweaks.pvpstats.model.AggregateStats;
 import com.dousiyo.dpvptweaks.pvpstats.model.MatchRecord;
 import com.dousiyo.dpvptweaks.pvpstats.model.PlayerStats;
+import com.dousiyo.dpvptweaks.pvpstats.model.PlayerPrivacySettings;
+import com.dousiyo.dpvptweaks.pvpstats.rank.RankState;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
@@ -16,9 +18,18 @@ public final class NbtStatsCodec {
     }
 
     public static CompoundTag writePlayer(String lastKnownName, AggregateStats global, Map<String, AggregateStats> modes, List<MatchRecord> recentMatches) {
+        return writePlayer(lastKnownName, global, modes, recentMatches, PlayerPrivacySettings.DEFAULT, Map.of());
+    }
+
+    public static CompoundTag writePlayer(String lastKnownName, AggregateStats global, Map<String, AggregateStats> modes, List<MatchRecord> recentMatches, PlayerPrivacySettings privacySettings) {
+        return writePlayer(lastKnownName, global, modes, recentMatches, privacySettings, Map.of());
+    }
+
+    public static CompoundTag writePlayer(String lastKnownName, AggregateStats global, Map<String, AggregateStats> modes, List<MatchRecord> recentMatches, PlayerPrivacySettings privacySettings, Map<String, RankState> ranks) {
         CompoundTag playerTag = new CompoundTag();
         playerTag.putString("LastKnownName", lastKnownName == null ? "" : lastKnownName);
         playerTag.put("Global", writeAggregate(global));
+        playerTag.put("Privacy", writePrivacy(privacySettings));
 
         ListTag modeList = new ListTag();
         for (Map.Entry<String, AggregateStats> entry : modes.entrySet()) {
@@ -34,6 +45,17 @@ public final class NbtStatsCodec {
             recentMatchesTag.add(writeMatch(matchRecord));
         }
         playerTag.put("RecentMatches", recentMatchesTag);
+
+        ListTag ranksTag = new ListTag();
+        for (Map.Entry<String, RankState> entry : (ranks == null ? Map.<String, RankState>of() : ranks).entrySet()) {
+            CompoundTag rankTag = new CompoundTag();
+            rankTag.putString("ModeId", entry.getKey());
+            rankTag.putInt("Rating", entry.getValue().rating());
+            rankTag.putInt("PeakRating", entry.getValue().peakRating());
+            rankTag.putInt("PlacementMatches", entry.getValue().placementMatches());
+            ranksTag.add(rankTag);
+        }
+        playerTag.put("Ranks", ranksTag);
         return playerTag;
     }
 
@@ -59,7 +81,15 @@ public final class NbtStatsCodec {
                 .map(NbtStatsCodec::readMatch)
                 .toList();
 
-        return new PlayerStats(lastKnownName, global, modes, recentMatches);
+        Map<String, RankState> ranks = new LinkedHashMap<>();
+        for (Tag tag : playerTag.getList("Ranks", Tag.TAG_COMPOUND)) {
+            if (tag instanceof CompoundTag rankTag && !rankTag.getString("ModeId").isBlank()) {
+                ranks.put(rankTag.getString("ModeId"), new RankState(
+                        rankTag.getInt("Rating"), rankTag.getInt("PeakRating"), rankTag.getInt("PlacementMatches")));
+            }
+        }
+        PlayerPrivacySettings privacySettings = readPrivacy(playerTag.getCompound("Privacy"));
+        return new PlayerStats(lastKnownName, global, modes, recentMatches, privacySettings, ranks);
     }
 
     public static CompoundTag writeAggregate(AggregateStats stats) {
@@ -105,5 +135,31 @@ public final class NbtStatsCodec {
                 tag.getInt("Deaths"),
                 tag.getLong("Timestamp")
         );
+    }
+
+    public static CompoundTag writePrivacy(PlayerPrivacySettings settings) {
+        PlayerPrivacySettings safeSettings = settings == null ? PlayerPrivacySettings.DEFAULT : settings;
+        CompoundTag tag = new CompoundTag();
+        tag.putBoolean("ShowRank", safeSettings.showRank());
+        tag.putBoolean("ShowStats", safeSettings.showStats());
+        tag.putBoolean("ShowMatchHistory", safeSettings.showMatchHistory());
+        tag.putBoolean("JoinLeaderboards", safeSettings.joinLeaderboards());
+        return tag;
+    }
+
+    public static PlayerPrivacySettings readPrivacy(CompoundTag tag) {
+        if (tag == null || tag.isEmpty()) {
+            return PlayerPrivacySettings.DEFAULT;
+        }
+        return new PlayerPrivacySettings(
+                readBooleanOrDefault(tag, "ShowRank", true),
+                readBooleanOrDefault(tag, "ShowStats", true),
+                readBooleanOrDefault(tag, "ShowMatchHistory", true),
+                readBooleanOrDefault(tag, "JoinLeaderboards", true)
+        );
+    }
+
+    private static boolean readBooleanOrDefault(CompoundTag tag, String key, boolean defaultValue) {
+        return tag.contains(key, Tag.TAG_BYTE) ? tag.getBoolean(key) : defaultValue;
     }
 }

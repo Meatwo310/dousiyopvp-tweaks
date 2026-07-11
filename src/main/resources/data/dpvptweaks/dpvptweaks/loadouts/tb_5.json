@@ -1,0 +1,15 @@
+{
+  "display": {
+    "name": "遊撃兵",
+    "weapons": "AR SG ME",
+    "description": "機動力を保ちつつ、補助と継戦能力を両立した支援型。",
+    "preview_items": [
+      { "type": "tacz_gun", "id": "maxstuff:aug_a2" },
+      { "type": "tacz_gun", "id": "cib:686" },
+      { "type": "item", "id": "superbwarfare:repair_tool" }
+    ]
+  },
+  "apply": {
+    "function": "dpvptweaks:loadouts/tb_5"
+  }
+}

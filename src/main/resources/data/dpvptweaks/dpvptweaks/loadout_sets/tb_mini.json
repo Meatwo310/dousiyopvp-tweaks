@@ -1,0 +1,12 @@
+{
+  "title": "TB Mini",
+  "layout": "mini",
+  "loadouts": [
+    "tb_mini_1",
+    "tb_mini_2",
+    "tb_mini_3",
+    "tb_mini_4",
+    "tb_mini_5",
+    "tb_mini_6"
+  ]
+}

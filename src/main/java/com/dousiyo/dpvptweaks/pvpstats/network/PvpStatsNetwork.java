@@ -2,6 +2,7 @@ package com.dousiyo.dpvptweaks.pvpstats.network;
 
 import com.dousiyo.dpvptweaks.DpvpTweaks;
 import com.dousiyo.dpvptweaks.pvpstats.network.c2s.RequestOwnStatsPacket;
+import com.dousiyo.dpvptweaks.pvpstats.network.c2s.UpdatePrivacySettingsPacket;
 import com.dousiyo.dpvptweaks.pvpstats.network.s2c.OpenStatsGuiPacket;
 import com.dousiyo.dpvptweaks.pvpstats.network.s2c.StatsErrorPacket;
 import net.minecraft.resources.ResourceLocation;
@@ -10,7 +11,7 @@ import net.minecraftforge.network.NetworkRegistry;
 import net.minecraftforge.network.simple.SimpleChannel;
 
 public final class PvpStatsNetwork {
-    private static final String PROTOCOL_VERSION = "1";
+    private static final String PROTOCOL_VERSION = "5";
     private static boolean registered;
     private static int packetId;
 
@@ -34,6 +35,12 @@ public final class PvpStatsNetwork {
                 .encoder(RequestOwnStatsPacket::encode)
                 .decoder(RequestOwnStatsPacket::decode)
                 .consumerMainThread(RequestOwnStatsPacket::handle)
+                .add();
+
+        CHANNEL.messageBuilder(UpdatePrivacySettingsPacket.class, packetId++, NetworkDirection.PLAY_TO_SERVER)
+                .encoder(UpdatePrivacySettingsPacket::encode)
+                .decoder(UpdatePrivacySettingsPacket::decode)
+                .consumerMainThread(UpdatePrivacySettingsPacket::handle)
                 .add();
 
         CHANNEL.messageBuilder(OpenStatsGuiPacket.class, packetId++, NetworkDirection.PLAY_TO_CLIENT)

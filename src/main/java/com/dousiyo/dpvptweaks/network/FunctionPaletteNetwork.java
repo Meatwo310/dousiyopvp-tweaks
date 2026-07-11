@@ -4,6 +4,7 @@ import com.dousiyo.dpvptweaks.DpvpTweaks;
 import com.dousiyo.dpvptweaks.network.functionpalette.c2s.RequestFunctionListPacket;
 import com.dousiyo.dpvptweaks.network.functionpalette.c2s.RunFunctionPacket;
 import com.dousiyo.dpvptweaks.network.functionpalette.s2c.FunctionListPacket;
+import com.dousiyo.dpvptweaks.network.functionpalette.s2c.FunctionResultPacket;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.network.NetworkDirection;
 import net.minecraftforge.network.NetworkRegistry;
@@ -47,6 +48,10 @@ public final class FunctionPaletteNetwork {
                 .decoder(FunctionListPacket::decode)
                 .consumerMainThread(FunctionListPacket::handle)
                 .add();
+
+        CHANNEL.messageBuilder(FunctionResultPacket.class, packetId++, NetworkDirection.PLAY_TO_CLIENT)
+                .encoder(FunctionResultPacket::encode).decoder(FunctionResultPacket::decode)
+                .consumerMainThread(FunctionResultPacket::handle).add();
 
         DpvpTweaks.LOGGER.info("[{}] Function palette network packets registered", DpvpTweaks.MOD_NAME);
     }

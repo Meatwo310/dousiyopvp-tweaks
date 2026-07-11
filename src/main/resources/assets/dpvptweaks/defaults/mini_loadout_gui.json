@@ -1,0 +1,70 @@
+{
+  "loadouts": [
+    {
+      "id": "tb_mini_1",
+      "name": "偵察兵",
+      "weapons": "AR PI",
+      "description": "軽量で扱いやすい前線向け構成。",
+      "items": [
+        "maxstuff:sr16",
+        "cib:js9",
+        "roughtweaks:medkit"
+      ]
+    },
+    {
+      "id": "tb_mini_2",
+      "name": "狙撃兵",
+      "weapons": "SR PI",
+      "description": "後方から援護しやすい安定構成。",
+      "items": [
+        "tacz:ai_awp",
+        "tacz:uzi",
+        "roughtweaks:medkit"
+      ]
+    },
+    {
+      "id": "tb_mini_3",
+      "name": "遊撃兵",
+      "weapons": "LMG PI",
+      "description": "弾幕を意識した制圧寄りの構成。",
+      "items": [
+        "maxstuff:ump9",
+        "maxstuff:m870t",
+        "roughtweaks:medkit"
+      ]
+    },
+    {
+      "id": "tb_mini_4",
+      "name": "強襲兵",
+      "weapons": "UTIL ME",
+      "description": "ユーティリティ重視の柔軟な構成。",
+      "items": [
+        "maxstuff:ak74",
+        "tacz:m1911",
+        "roughtweaks:medkit"
+      ]
+    },
+    {
+      "id": "tb_mini_5",
+      "name": "遊撃兵",
+      "weapons": "SG PI",
+      "description": "近距離の迎撃に強い防衛構成。",
+      "items": [
+        "maxstuff:aug_a2",
+        "cib:686",
+        "roughtweaks:medkit"
+      ]
+    },
+    {
+      "id": "tb_mini_6",
+      "name": "工兵",
+      "weapons": "DMR PI",
+      "description": "索敵しながら中距離を維持する構成。",
+      "items": [
+        "tacz:qbz_95",
+        "cib:r8",
+        "roughtweaks:medkit"
+      ]
+    }
+  ]
+}
