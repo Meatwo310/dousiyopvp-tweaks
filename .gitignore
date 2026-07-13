@@ -29,8 +29,5 @@ forge*changelog.txt
 /run-data/
 
 docs
-!docs/
-docs/*
-!docs/dpvptweaks-spec-ja.md
-!docs/dousiyo-server-spec-ja.md
+
 /.gradle-user/
