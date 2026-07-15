@@ -1,12 +1,17 @@
 {
-  "title": "TB Mini",
-  "layout": "mini",
+  "display_name": "TB Mini",
   "loadouts": [
-    "tb_mini_1",
-    "tb_mini_2",
-    "tb_mini_3",
-    "tb_mini_4",
-    "tb_mini_5",
-    "tb_mini_6"
+    { "id": "tb_mini_1", "display_name": "TB Mini 1", "description": "" },
+    { "id": "tb_mini_2", "display_name": "TB Mini 2", "description": "" },
+    { "id": "tb_mini_3", "display_name": "TB Mini 3", "description": "" },
+    { "id": "tb_mini_4", "display_name": "TB Mini 4", "description": "" },
+    { "id": "tb_mini_5", "display_name": "TB Mini 5", "description": "" },
+    { "id": "tb_mini_6", "display_name": "TB Mini 6", "description": "" },
+    {
+      "id": "tb_mini_random",
+      "display_name": "Random",
+      "description": "ランダムな武器を使用します",
+      "random": { "profile": "tb_mini", "template": "tb_mini_random", "weapon_count": 2 }
+    }
   ]
 }

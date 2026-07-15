@@ -8,12 +8,15 @@ import com.dousiyo.dpvptweaks.effect.ModEffects;
 import com.dousiyo.dpvptweaks.item.ModCreativeModeTabs;
 import com.dousiyo.dpvptweaks.item.ModItems;
 import com.dousiyo.dpvptweaks.network.CaptureNetwork;
+import com.dousiyo.dpvptweaks.network.ArsenalNetwork;
 import com.dousiyo.dpvptweaks.network.DousiyoServerMainReceiverNetwork;
 import com.dousiyo.dpvptweaks.network.FunctionPaletteNetwork;
 import com.dousiyo.dpvptweaks.network.LoadoutGuiNetwork;
+import com.dousiyo.dpvptweaks.network.SecretOperationsNetwork;
 import com.dousiyo.dpvptweaks.pvpstats.network.PvpStatsNetwork;
 import com.dousiyo.dpvptweaks.server.function.FunctionPaletteServerConfig;
 import com.dousiyo.dpvptweaks.timer.config.TimerClientConfig;
+import com.dousiyo.dpvptweaks.temporarybuilding.ModTemporaryBlocks;
 import com.dousiyo.dpvptweaks.timer.network.ModNetwork;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.ModList;
@@ -54,11 +57,14 @@ public class DpvpTweaks {
         }
 
         ModItems.register(modEventBus);
+        ModTemporaryBlocks.register(modEventBus);
         ModCreativeModeTabs.register(modEventBus);
         ModEntities.register(modEventBus);
         ModEffects.register(modEventBus);
         CaptureNetwork.register();
+        ArsenalNetwork.register();
         LoadoutGuiNetwork.register();
+        SecretOperationsNetwork.register();
         FunctionPaletteNetwork.register();
         PvpStatsNetwork.register();
         ModNetwork.register();

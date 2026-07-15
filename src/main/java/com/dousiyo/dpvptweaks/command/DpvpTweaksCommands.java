@@ -19,8 +19,17 @@ public class DpvpTweaksCommands {
         DpvpTweaksClearCommand.register(builder, event);
         DpvpTweaksLoadoutCommand.register(builder, event);
         DpvpTweaksIntelDraftCommand.register(builder, event);
+        DpvpTweaksSecretOperationsCommand.register(builder, event);
+        DpvpTweaksDamageFeedbackCommand.register(builder, event);
+        DpvpTweaksArsenalCommand.register(builder, event);
 
         event.getDispatcher().register(builder);
+        event.getDispatcher().register(DpvpTweaksLoadoutCommand.buildDirectCommand());
+        event.getDispatcher().register(DpvpTweaksIntelDraftCommand.buildDirectCommand());
+        event.getDispatcher().register(DpvpTweaksSecretOperationsCommand.buildDirect("secretoperations"));
+        event.getDispatcher().register(DpvpTweaksSecretOperationsCommand.buildDirect("sp"));
+        event.getDispatcher().register(DpvpTweaksDamageFeedbackCommand.buildDirect("damagefeedback"));
+        event.getDispatcher().register(DpvpTweaksArsenalCommand.buildDirect());
     }
 }
 

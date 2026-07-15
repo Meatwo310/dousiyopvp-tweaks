@@ -1,62 +1,74 @@
 {
-  "rerollCount": 1,
+  "sessionSeconds": 30,
+  "rerollCount": 3,
   "techs": [
-    {
-      "id": 1,
-      "name": "スピードリロード",
-      "description": "全ての武器のリロード速度アップ",
-      "iconItem": "minecraft:sugar"
-    },
-    {
-      "id": 2,
-      "name": "ガンスミス",
-      "description": "全ての武器をより高いレア度にアップグレードする",
-      "iconItem": "minecraft:smithing_table"
-    },
-    {
-      "id": 3,
-      "name": "パワーフィッシュ",
-      "description": "泳ぎが速くなる",
-      "iconItem": "minecraft:cod"
-    },
-    {
-      "id": 4,
-      "name": "フィールドメディック",
-      "description": "味方を支援しやすい回復技術",
-      "iconItem": "minecraft:golden_apple"
-    },
-    {
-      "id": 5,
-      "name": "リコン",
-      "description": "敵の位置を把握しやすくなる索敵技術",
-      "iconItem": "minecraft:compass"
-    }
+    {"id":"dpvptweaks:double_jump","name":"二段跳躍","description":"空中でもう一度ジャンプできる","iconItem":"minecraft:rabbit_foot","effect":{"type":"double_jump","values":{}}},
+    {"id":"dpvptweaks:sneaky","name":"軽快な足取り","description":"しゃがみ中の移動速度が20%上昇","iconItem":"minecraft:leather_boots","effect":{"type":"sneaky","values":{"bonus":0.2}}},
+    {"id":"dpvptweaks:part_fish","name":"水中推進","description":"水中移動速度が35%上昇","iconItem":"minecraft:cod","effect":{"type":"part_fish","values":{"bonus":0.35}}},
+    {"id":"dpvptweaks:soft_landing","name":"軟着陸","description":"落下ダメージを40%軽減","iconItem":"minecraft:feather","effect":{"type":"soft_landing","values":{"reduction":0.4}}},
+    {"id":"dpvptweaks:emergency_speed","name":"緊急加速","description":"被弾すると3秒間加速する","iconItem":"minecraft:sugar","effect":{"type":"emergency_speed","values":{"durationTicks":60}}},
+    {"id":"dpvptweaks:battle_ready","name":"戦闘準備","description":"選択時とリスポーン時に吸収体力を得る","iconItem":"minecraft:golden_apple","effect":{"type":"battle_ready","values":{"amplifier":0}}},
+    {"id":"dpvptweaks:shield_drip","name":"シールド充填","description":"吸収体力が徐々に最大8まで回復","iconItem":"minecraft:blue_dye","effect":{"type":"shield_drip","values":{"max":8,"perPulse":0.25}}},
+    {"id":"dpvptweaks:reinvigorated","name":"再起","description":"敵プレイヤーを倒すと体力を4回復","iconItem":"minecraft:glistering_melon_slice","effect":{"type":"reinvigorated","values":{"heal":4}}},
+    {"id":"dpvptweaks:from_the_brink","name":"瀬戸際","description":"低体力時の与ダメージが20%上昇","iconItem":"minecraft:fermented_spider_eye","effect":{"type":"from_the_brink","values":{"healthRatio":0.3,"bonus":0.2}}},
+    {"id":"dpvptweaks:strong_resolve","name":"強固な意志","description":"受けるノックバックを35%軽減","iconItem":"minecraft:iron_chestplate","effect":{"type":"strong_resolve","values":{"reduction":0.35}}},
+    {"id":"dpvptweaks:air_attack","name":"空中攻撃","description":"空中での与ダメージが15%上昇","iconItem":"minecraft:firework_rocket","effect":{"type":"air_attack","values":{"bonus":0.15}}},
+    {"id":"dpvptweaks:tracer_rounds","name":"追跡弾","description":"攻撃した敵を5秒間発光させる","iconItem":"minecraft:spectral_arrow","effect":{"type":"tracer_rounds","values":{"durationTicks":100}}},
+    {"id":"dpvptweaks:informant","name":"情報解析","description":"撃破した敵の周囲にいる敵を表示","iconItem":"minecraft:compass","effect":{"type":"informant","values":{"radius":20,"durationTicks":100}}},
+    {"id":"dpvptweaks:weakness_analysis","name":"弱点解析","description":"同じ敵への3発目のダメージが15%上昇","iconItem":"minecraft:spyglass","effect":{"type":"weakness_analysis","values":{"hits":3,"bonus":0.15}}},
+    {"id":"dpvptweaks:field_medic","name":"救急処置","description":"食料による回復後に体力を追加回復","iconItem":"minecraft:glistering_melon_slice","effect":{"type":"field_medic","values":{"heal":2,"cooldownTicks":160}}},
+    {"id":"dpvptweaks:hasty_harvest","name":"採掘加速","description":"採掘道具を持っている間、採掘速度が上昇","iconItem":"minecraft:iron_pickaxe","effect":{"type":"hasty_harvest","values":{}}},
+    {"id":"dpvptweaks:overprepared","name":"追加準備","description":"選択時とリスポーン時の弾薬を50%増加","iconItem":"minecraft:chest","effect":{"type":"overprepared","values":{"multiplier":1.5}}},
+    {"id":"dpvptweaks:resupply","name":"戦場補給","description":"敵プレイヤー撃破時に全種類の弾薬を補給","iconItem":"minecraft:barrel","effect":{"type":"resupply","values":{}}},
+    {"id":"dpvptweaks:incendiary_ammo","name":"焼夷弾","description":"選択時にTACZの焼夷弾を1個獲得","iconItem":"tacz:ammo_mod_i","effect":{"type":"incendiary_ammo","values":{}}},
+    {"id":"dpvptweaks:building_supplies","name":"建築資材","description":"木材と石レンガを40個ずつ獲得","iconItem":"minecraft:bricks","effect":{"type":"building_supplies","values":{}}},
+    {"id":"dpvptweaks:building_tool_upgrade","name":"高性能建築工具","description":"仮設ブロックの撤去に優れたネザライトつるはしへ強化","iconItem":"minecraft:netherite_pickaxe","effect":{"type":"building_tool_upgrade","values":{}}}
   ],
   "guns": [
-    {
-      "id": 1,
-      "name": "スターターサブマシンガン",
-      "item": "maxstuff:sr16"
-    },
-    {
-      "id": 2,
-      "name": "スターターポンプショットガン",
-      "item": "maxstuff:m870t"
-    },
-    {
-      "id": 3,
-      "name": "地雷",
-      "item": "minecraft:heavy_weighted_pressure_plate"
-    },
-    {
-      "id": 4,
-      "name": "スタータースナイパー",
-      "item": "tacz:ai_awp"
-    },
-    {
-      "id": 5,
-      "name": "スターターライフル",
-      "item": "maxstuff:ak74"
-    }
+    {"id":"tacz:uzi","name":"UZI","count":1},
+    {"id":"tacz:ump45","name":"UMP45","count":1},
+    {"id":"tacz:qbz_95","name":"QBZ-95","count":1},
+    {"id":"tacz:ai_awp","name":"AWP","count":1},
+    {"id":"maxstuff:ak74","name":"AK-74","count":1},
+    {"id":"maxstuff:m870t","name":"M870T","count":1},
+    {"id":"tacz:m870","name":"M870","count":1},
+    {"id":"tacz:hk_mp5a5","name":"MP5","count":1},
+    {"id":"tacz:scar_h","name":"SCAR-H","count":1},
+    {"id":"tacz:m4a1","name":"M4A1","count":1},
+    {"id":"tacz:spas_12","name":"SPAS-12","count":1},
+    {"id":"tacz:m16a4","name":"M16A4","count":1}
+  ],
+  "attachments": [
+    {"id":"tacz:sight_sro_dot","name":"SROドットサイト","count":1},
+    {"id":"tacz:sight_uh1","name":"UH-1サイト","count":1},
+    {"id":"tacz:scope_acog_ta31","name":"ACOG TA31","count":1},
+    {"id":"tacz:muzzle_silencer_phantom_s1","name":"Phantomサプレッサー","count":1},
+    {"id":"tacz:grip_vertical_military","name":"バーティカルグリップ","count":1},
+    {"id":"tacz:extended_mag_2","name":"拡張マガジン","count":1},
+    {"id":"tacz:sight_t1","name":"T1ドットサイト","count":1},
+    {"id":"tacz:sight_t2","name":"T2ドットサイト","count":1},
+    {"id":"tacz:sight_coyote","name":"コヨーテサイト","count":1},
+    {"id":"tacz:sight_exp3","name":"EXP3 HCOG","count":1},
+    {"id":"tacz:scope_elcan_4x","name":"ELCAN 4倍スコープ","count":1},
+    {"id":"tacz:scope_hamr","name":"HAMR 3倍スコープ","count":1},
+    {"id":"tacz:scope_vudu","name":"Vudu 1-6倍スコープ","count":1},
+    {"id":"tacz:laser_compact","name":"コンパクトレーザー","count":1},
+    {"id":"tacz:laser_peq15","name":"PEQ-15レーザー","count":1},
+    {"id":"tacz:muzzle_brake_cthulhu","name":"Cthulhuマズルブレーキ","count":1},
+    {"id":"tacz:muzzle_compensator_trident","name":"Tridentコンペンセイター","count":1},
+    {"id":"tacz:muzzle_silencer_knight_qd","name":"Knight QDサプレッサー","count":1},
+    {"id":"tacz:grip_cobra","name":"Cobraグリップ","count":1},
+    {"id":"tacz:grip_rk6","name":"RK-6グリップ","count":1},
+    {"id":"tacz:extended_mag_1","name":"拡張マガジン I","count":1},
+    {"id":"tacz:light_extended_mag_1","name":"軽量拡張マガジン I","count":1},
+    {"id":"tacz:sniper_extended_mag_1","name":"スナイパー用拡張マガジン I","count":1},
+    {"id":"tacz:shotgun_extended_mag_1","name":"ショットガン用拡張マガジン I","count":1},
+    {"id":"tacz:stock_tactical_ar","name":"タクティカルストック","count":1}
+  ],
+  "ammo": [
+    {"id":"tacz:9mm","onSelect":60,"onRespawn":30,"onElimination":10},
+    {"id":"tacz:556x45","onSelect":60,"onRespawn":30,"onElimination":10},
+    {"id":"tacz:12g","onSelect":16,"onRespawn":8,"onElimination":4},
+    {"id":"tacz:308","onSelect":12,"onRespawn":6,"onElimination":2}
   ]
 }

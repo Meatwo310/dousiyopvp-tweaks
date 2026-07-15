@@ -52,24 +52,6 @@ public final class DousiyoServerMainReceiverNetwork {
                 .consumerMainThread(SelectLoadoutPacket::handle)
                 .add();
 
-        CHANNEL.messageBuilder(OpenIntelDraftGuiPacket.class, packetId++, NetworkDirection.PLAY_TO_CLIENT)
-                .encoder(OpenIntelDraftGuiPacket::encode)
-                .decoder(OpenIntelDraftGuiPacket::decode)
-                .consumerMainThread(OpenIntelDraftGuiPacket::handle)
-                .add();
-
-        CHANNEL.messageBuilder(RerollIntelDraftPacket.class, packetId++, NetworkDirection.PLAY_TO_SERVER)
-                .encoder(RerollIntelDraftPacket::encode)
-                .decoder(RerollIntelDraftPacket::decode)
-                .consumerMainThread(RerollIntelDraftPacket::handle)
-                .add();
-
-        CHANNEL.messageBuilder(SelectIntelDraftPacket.class, packetId++, NetworkDirection.PLAY_TO_SERVER)
-                .encoder(SelectIntelDraftPacket::encode)
-                .decoder(SelectIntelDraftPacket::decode)
-                .consumerMainThread(SelectIntelDraftPacket::handle)
-                .add();
-
         DpvpTweaks.LOGGER.info("[{}] Registered fallback receiver for {}:{}", DpvpTweaks.MOD_NAME, CHANNEL_NAMESPACE, CHANNEL_NAME);
     }
 

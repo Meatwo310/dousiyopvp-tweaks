@@ -1,0 +1,11 @@
+{
+  "providers": [
+    {
+      "type": "ttf",
+      "file": "dpvptweaks:anton_regular.ttf",
+      "size": 11.0,
+      "oversample": 3.0,
+      "shift": [0.0, 1.0]
+    }
+  ]
+}

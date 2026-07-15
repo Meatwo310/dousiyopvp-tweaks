@@ -21,6 +21,10 @@ public class RerollIntelDraftPacket {
     }
 
     public static void handle(RerollIntelDraftPacket msg, Supplier<NetworkEvent.Context> ctx) {
-        ctx.get().setPacketHandled(true);
+        NetworkEvent.Context context = ctx.get();
+        var sender = context.getSender();
+        if (sender != null) context.enqueueWork(() ->
+                com.dousiyo.dpvptweaks.inteldraft.IntelDraftManager.reroll(sender, msg.sessionId));
+        context.setPacketHandled(true);
     }
 }

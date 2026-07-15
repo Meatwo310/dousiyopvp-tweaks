@@ -10,6 +10,9 @@ import net.minecraftforge.registries.RegistryObject;
 public class ModItems {
     public static final DeferredRegister<Item> ITEMS = DeferredRegister.create(ForgeRegistries.ITEMS, DpvpTweaks.MODID);
 
+    public static final RegistryObject<Item> RANDOM_LOADOUT_ICON = ITEMS.register("random_loadout_icon", () ->
+            new Item(new Item.Properties().stacksTo(1)));
+
     public static final RegistryObject<Item> VALINE1G = ITEMS.register("valine1g", () ->
             new ThrowableStoneItem.ThrowableValine1gItem(new Item.Properties().stacksTo(64)));
     public static final RegistryObject<Item> VALINE2G = ITEMS.register("valine2g", () ->

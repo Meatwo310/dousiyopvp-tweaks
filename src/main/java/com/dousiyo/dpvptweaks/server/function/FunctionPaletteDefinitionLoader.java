@@ -54,6 +54,8 @@ public final class FunctionPaletteDefinitionLoader {
             require(parsed.isJsonObject(), file + ": root must be an object");
             root = parsed.getAsJsonObject();
         }
+        // Other features intentionally share dousiyo/*.json. Only claim palette-shaped files.
+        if (!root.has("schema_version") && !root.has("buttons")) return;
         require(root.has("schema_version") && root.get("schema_version").isJsonPrimitive()
                 && root.get("schema_version").getAsInt() == 1, file + ": schema_version must be 1");
         require(root.has("buttons") && root.get("buttons").isJsonArray(), file + ": buttons must be an array");

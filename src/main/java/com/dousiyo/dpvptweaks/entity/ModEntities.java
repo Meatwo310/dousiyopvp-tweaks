@@ -38,6 +38,15 @@ public class ModEntities {
     public static final RegistryObject<EntityType<ThrownStone.ThrownValine3g>> THROWN_VALINE3G =
             registerEntity("thrown_valine3g", ThrownStone.ThrownValine3g::new);
 
+    public static final RegistryObject<EntityType<SecretConvoyTruckEntity>> SECRET_CONVOY_TRUCK =
+            TYPES.register("secret_convoy_truck", () -> EntityType.Builder
+                    .of(SecretConvoyTruckEntity::new, MobCategory.MISC)
+                    .sized(2.2F, 2.4F)
+                    .clientTrackingRange(10)
+                    .updateInterval(1)
+                    .fireImmune()
+                    .build(DpvpTweaks.MODID + ":secret_convoy_truck"));
+
     public static void register(IEventBus modEventBus) {
         TYPES.register(modEventBus);
     }

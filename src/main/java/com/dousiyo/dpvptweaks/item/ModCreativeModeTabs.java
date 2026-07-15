@@ -1,6 +1,7 @@
 package com.dousiyo.dpvptweaks.item;
 
 import com.dousiyo.dpvptweaks.DpvpTweaks;
+import com.dousiyo.dpvptweaks.temporarybuilding.ModTemporaryBlocks;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.CreativeModeTab;
@@ -23,6 +24,9 @@ public class ModCreativeModeTabs {
 
     private static void accept(CreativeModeTab.ItemDisplayParameters parameters, CreativeModeTab.Output output) {
         for (RegistryObject<Item> registryItem : ModItems.ITEMS.getEntries()) {
+            output.accept(registryItem.get());
+        }
+        for (RegistryObject<Item> registryItem : ModTemporaryBlocks.ITEMS.getEntries()) {
             output.accept(registryItem.get());
         }
     }

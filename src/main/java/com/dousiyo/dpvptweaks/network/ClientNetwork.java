@@ -55,30 +55,6 @@ public class ClientNetwork {
                 SelectLoadoutPacket::handle
         );
 
-        CHANNEL.registerMessage(
-                nextId(),
-                OpenIntelDraftGuiPacket.class,
-                OpenIntelDraftGuiPacket::encode,
-                OpenIntelDraftGuiPacket::decode,
-                OpenIntelDraftGuiPacket::handle
-        );
-
-        CHANNEL.registerMessage(
-                nextId(),
-                RerollIntelDraftPacket.class,
-                RerollIntelDraftPacket::encode,
-                RerollIntelDraftPacket::decode,
-                RerollIntelDraftPacket::handle
-        );
-
-        CHANNEL.registerMessage(
-                nextId(),
-                SelectIntelDraftPacket.class,
-                SelectIntelDraftPacket::encode,
-                SelectIntelDraftPacket::decode,
-                SelectIntelDraftPacket::handle
-        );
-
         DpvpTweaks.LOGGER.info("[{}] Gameplay network packets registered", DpvpTweaks.MOD_NAME);
     }
 }

@@ -1,15 +1,20 @@
 {
-  "title": "TB",
-  "layout": "normal",
+  "display_name": "TB",
   "loadouts": [
-    "tb_1",
-    "tb_2",
-    "tb_3",
-    "tb_4",
-    "tb_5",
-    "tb_6",
-    "tb_7",
-    "tb_8",
-    "tb_default"
+    { "id": "tb_1", "display_name": "TB 1", "description": "" },
+    { "id": "tb_2", "display_name": "TB 2", "description": "" },
+    { "id": "tb_3", "display_name": "TB 3", "description": "" },
+    { "id": "tb_4", "display_name": "TB 4", "description": "" },
+    { "id": "tb_5", "display_name": "TB 5", "description": "" },
+    { "id": "tb_6", "display_name": "TB 6", "description": "" },
+    { "id": "tb_7", "display_name": "TB 7", "description": "" },
+    { "id": "tb_8", "display_name": "TB 8", "description": "" },
+    { "id": "tb_default", "display_name": "Default", "description": "" },
+    {
+      "id": "tb_random",
+      "display_name": "Random",
+      "description": "ランダムな武器を使用します",
+      "random": { "profile": "tb", "template": "tb_random", "weapon_count": 3 }
+    }
   ]
 }

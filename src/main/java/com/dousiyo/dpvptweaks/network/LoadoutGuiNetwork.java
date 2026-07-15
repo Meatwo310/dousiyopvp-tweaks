@@ -7,7 +7,7 @@ import net.minecraftforge.network.NetworkRegistry;
 import net.minecraftforge.network.simple.SimpleChannel;
 
 public final class LoadoutGuiNetwork {
-    private static final String PROTOCOL_VERSION = "2";
+    private static final String PROTOCOL_VERSION = "4";
     private static boolean registered;
     private static int packetId;
 
@@ -67,6 +67,18 @@ public final class LoadoutGuiNetwork {
                 .encoder(SelectIntelDraftPacket::encode)
                 .decoder(SelectIntelDraftPacket::decode)
                 .consumerMainThread(SelectIntelDraftPacket::handle)
+                .add();
+
+        CHANNEL.messageBuilder(ActivateIntelTechPacket.class, packetId++, NetworkDirection.PLAY_TO_SERVER)
+                .encoder(ActivateIntelTechPacket::encode)
+                .decoder(ActivateIntelTechPacket::decode)
+                .consumerMainThread(ActivateIntelTechPacket::handle)
+                .add();
+
+        CHANNEL.messageBuilder(IntelDraftStatePacket.class, packetId++, NetworkDirection.PLAY_TO_CLIENT)
+                .encoder(IntelDraftStatePacket::encode)
+                .decoder(IntelDraftStatePacket::decode)
+                .consumerMainThread(IntelDraftStatePacket::handle)
                 .add();
 
         CHANNEL.messageBuilder(SelectLoadoutGuiPacket.class, packetId++, NetworkDirection.PLAY_TO_SERVER)

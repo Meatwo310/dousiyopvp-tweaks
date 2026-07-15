@@ -12,7 +12,6 @@ public final class LoadoutReloadEvents {
 
     @SubscribeEvent
     public static void onAddReloadListeners(AddReloadListenerEvent event) {
-        event.addListener(new LoadoutDefinitionReloadListener());
         event.addListener(new LoadoutSetReloadListener());
     }
 }

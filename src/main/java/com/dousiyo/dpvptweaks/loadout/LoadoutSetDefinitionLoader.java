@@ -10,62 +10,69 @@ import java.util.ArrayList;
 import java.util.List;
 
 public final class LoadoutSetDefinitionLoader {
-    private LoadoutSetDefinitionLoader() {
-    }
+    private LoadoutSetDefinitionLoader() {}
 
     public static LoadoutSetDefinition fromDataPack(ResourceLocation id, JsonElement element, String logName) {
-        if (id == null || element == null || !element.isJsonObject()) {
-            return null;
-        }
-
+        if (id == null || element == null || !element.isJsonObject()) return null;
         JsonObject root = element.getAsJsonObject();
-        JsonArray loadoutArray = getArray(root, "loadouts");
-        List<ResourceLocation> loadouts = new ArrayList<>();
-        if (loadoutArray != null) {
-            for (JsonElement loadoutElement : loadoutArray) {
-                String raw = loadoutElement == null || !loadoutElement.isJsonPrimitive() ? "" : loadoutElement.getAsString().trim();
-                ResourceLocation loadoutId = parseResourceLocation(raw, id.getNamespace());
-                if (loadoutId == null) {
-                    DpvpTweaks.LOGGER.warn("[{}] {} has invalid loadout id in set '{}': {}", DpvpTweaks.MOD_NAME, logName, id, raw);
-                    continue;
+        JsonArray array = root.has("loadouts") && root.get("loadouts").isJsonArray()
+                ? root.getAsJsonArray("loadouts") : new JsonArray();
+        List<LoadoutSetDefinition.Entry> entries = new ArrayList<>();
+        for (JsonElement raw : array) {
+            String loadoutId;
+            String displayName;
+            String description;
+            String afterApply;
+            LoadoutSetDefinition.RandomDefinition random = null;
+            if (raw.isJsonPrimitive()) {
+                loadoutId = raw.getAsString().trim();
+                displayName = loadoutId;
+                description = "";
+                afterApply = "";
+            } else if (raw.isJsonObject()) {
+                JsonObject object = raw.getAsJsonObject();
+                loadoutId = string(object, "id", "").trim();
+                displayName = string(object, "display_name", loadoutId);
+                description = string(object, "description", "");
+                afterApply = string(object, "after_apply", "").trim();
+                if (object.has("random") && object.get("random").isJsonObject()) {
+                    JsonObject randomObject = object.getAsJsonObject("random");
+                    String profile = string(randomObject, "profile", "").trim();
+                    String template = string(randomObject, "template", "").trim();
+                    int weaponCount = integer(randomObject, "weapon_count", 0);
+                    if (!validId(profile) || !validId(template) || (weaponCount != 2 && weaponCount != 3)) {
+                        DpvpTweaks.LOGGER.warn("[{}] Invalid random definition in set {} for entry {}", logName, id, loadoutId);
+                        continue;
+                    }
+                    random = new LoadoutSetDefinition.RandomDefinition(profile, template, weaponCount);
                 }
-                loadouts.add(loadoutId);
+            } else continue;
+
+            if (!validId(loadoutId)) {
+                DpvpTweaks.LOGGER.warn("[{}] Invalid saved loadout id in set {}: {}", logName, id, loadoutId);
+                continue;
             }
+            ResourceLocation function = afterApply.isBlank() ? null : ResourceLocation.tryParse(afterApply);
+            if (!afterApply.isBlank() && function == null) {
+                DpvpTweaks.LOGGER.warn("[{}] Invalid after_apply in set {}: {}", logName, id, afterApply);
+                continue;
+            }
+            entries.add(new LoadoutSetDefinition.Entry(loadoutId, displayName, description, function, random));
         }
-
-        return new LoadoutSetDefinition(
-                id,
-                getString(root, "title", id.toString()),
-                getString(root, "layout", "normal"),
-                loadouts
-        );
+        return new LoadoutSetDefinition(id, string(root, "display_name", id.getPath()), entries);
     }
 
-    private static ResourceLocation parseResourceLocation(String raw, String defaultNamespace) {
-        if (raw == null || raw.isBlank()) {
-            return null;
-        }
-        String trimmed = raw.trim();
-        if (!trimmed.contains(":")) {
-            return ResourceLocation.tryParse(defaultNamespace + ":" + trimmed);
-        }
-        return ResourceLocation.tryParse(trimmed);
+    private static String string(JsonObject object, String key, String fallback) {
+        try { return object.has(key) ? object.get(key).getAsString() : fallback; }
+        catch (RuntimeException ignored) { return fallback; }
     }
 
-    private static JsonArray getArray(JsonObject object, String key) {
-        JsonElement element = object.get(key);
-        return element != null && element.isJsonArray() ? element.getAsJsonArray() : null;
+    private static int integer(JsonObject object, String key, int fallback) {
+        try { return object.has(key) ? object.get(key).getAsInt() : fallback; }
+        catch (RuntimeException ignored) { return fallback; }
     }
 
-    private static String getString(JsonObject object, String key, String defaultValue) {
-        JsonElement element = object.get(key);
-        if (element == null || element.isJsonNull() || !element.isJsonPrimitive()) {
-            return defaultValue;
-        }
-        try {
-            return element.getAsString();
-        } catch (ClassCastException | IllegalStateException e) {
-            return defaultValue;
-        }
+    private static boolean validId(String id) {
+        return id != null && id.matches("[a-z0-9][a-z0-9._-]{0,63}");
     }
 }

@@ -32,6 +32,10 @@ public class SelectIntelDraftPacket {
     }
 
     public static void handle(SelectIntelDraftPacket msg, Supplier<NetworkEvent.Context> ctx) {
-        ctx.get().setPacketHandled(true);
+        NetworkEvent.Context context = ctx.get();
+        var sender = context.getSender();
+        if (sender != null) context.enqueueWork(() ->
+                com.dousiyo.dpvptweaks.inteldraft.IntelDraftManager.select(sender, msg.sessionId, msg.choiceIndex));
+        context.setPacketHandled(true);
     }
 }

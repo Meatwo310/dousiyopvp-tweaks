@@ -2,6 +2,7 @@ package com.dousiyo.dpvptweaks.client.pvpstats.screen;
 
 import com.dousiyo.dpvptweaks.DpvpTweaks;
 import com.dousiyo.dpvptweaks.client.pvpstats.PvpStatsClient;
+import com.dousiyo.dpvptweaks.config.ClientConfig;
 import com.dousiyo.dpvptweaks.pvpstats.model.AggregateStats;
 import com.dousiyo.dpvptweaks.pvpstats.model.MatchRecord;
 import com.dousiyo.dpvptweaks.pvpstats.model.PlayerPrivacySettings;
@@ -108,10 +109,13 @@ public class PvpStatsScreen extends Screen {
     private static final Rect SORT_WIN_RATE = new Rect(237, 64, 67, 14);
     private static final Rect RANK_SUBTAB_RANKING = new Rect(84, 48, 68, 14);
     private static final Rect RANK_SUBTAB_BADGES = new Rect(154, 48, 68, 14);
+    private static final Rect SETTINGS_CATEGORY_PRIVACY = new Rect(6, 64, 60, 14);
+    private static final Rect SETTINGS_CATEGORY_DISPLAY = new Rect(6, 80, 60, 14);
     private static final Rect SETTING_SHOW_RANK = new Rect(92, 70, 210, 18);
     private static final Rect SETTING_SHOW_STATS = new Rect(92, 94, 210, 18);
     private static final Rect SETTING_SHOW_MATCH_HISTORY = new Rect(92, 118, 210, 18);
     private static final Rect SETTING_JOIN_LEADERBOARDS = new Rect(92, 142, 210, 18);
+    private static final Rect SETTING_LOADOUT_THEME = new Rect(92, 70, 210, 18);
 
     private static final int MODE_ROW_Y = 108;
     private static final int MODE_ROW_HEIGHT = 14;
@@ -137,6 +141,7 @@ public class PvpStatsScreen extends Screen {
     private HistoryFilter historyFilter = HistoryFilter.ALL;
     private RankingSort rankingSort = RankingSort.KILLS;
     private RankSubPage rankSubPage = RankSubPage.RANKING;
+    private SettingsCategory settingsCategory = SettingsCategory.PRIVACY;
     private EditBox searchBox;
     private String searchText = "";
 
@@ -545,17 +550,28 @@ public class PvpStatsScreen extends Screen {
 
     private void renderSettings(GuiGraphics gg, int mouseX, int mouseY) {
         drawTrimmed(gg, text("settings.category"), this.leftPos + 6, this.topPos + 50, 64, 0x9FD9E9);
-        renderTextButton(gg, new Rect(6, 64, 60, MODE_ROW_HEIGHT),
-                Component.translatable(key("settings.category.privacy")), true, true, mouseX, mouseY);
+        renderTextButton(gg, SETTINGS_CATEGORY_PRIVACY,
+                Component.translatable(key("settings.category.privacy")), this.settingsCategory == SettingsCategory.PRIVACY,
+                true, mouseX, mouseY);
+        renderTextButton(gg, SETTINGS_CATEGORY_DISPLAY,
+                Component.translatable(key("settings.category.display")), this.settingsCategory == SettingsCategory.DISPLAY,
+                true, mouseX, mouseY);
 
-        drawTrimmed(gg, text("settings.title"), this.leftPos + 92, this.topPos + 54, 120, 0xF2FBFF);
-        PlayerPrivacySettings settings = this.payload.privacySettings();
-        renderSettingRow(gg, SETTING_SHOW_RANK, key("setting.show_rank"), settings.showRank(), mouseX, mouseY);
-        renderSettingRow(gg, SETTING_SHOW_STATS, key("setting.show_stats"), settings.showStats(), mouseX, mouseY);
-        renderSettingRow(gg, SETTING_SHOW_MATCH_HISTORY, key("setting.show_match_history"), settings.showMatchHistory(), mouseX, mouseY);
-        renderSettingRow(gg, SETTING_JOIN_LEADERBOARDS, key("setting.join_leaderboards"), settings.joinLeaderboards(), mouseX, mouseY);
-        if (!this.payload.editableSettings()) {
-            drawTrimmed(gg, text("settings.not_editable"), this.leftPos + 100, this.topPos + 173, 194, 0xBFD6DE);
+        if (this.settingsCategory == SettingsCategory.DISPLAY) {
+            drawTrimmed(gg, text("settings.display.title"), this.leftPos + 92, this.topPos + 54, 120, 0xF2FBFF);
+            renderChoiceSettingRow(gg, SETTING_LOADOUT_THEME, key("setting.loadout_theme"),
+                    loadoutThemeLabel(ClientConfig.LOADOUT_THEME_MODE.get()), mouseX, mouseY);
+            drawTrimmed(gg, text("settings.display.local_only"), this.leftPos + 100, this.topPos + 100, 194, 0x7898A4);
+        } else {
+            drawTrimmed(gg, text("settings.title"), this.leftPos + 92, this.topPos + 54, 120, 0xF2FBFF);
+            PlayerPrivacySettings settings = this.payload.privacySettings();
+            renderSettingRow(gg, SETTING_SHOW_RANK, key("setting.show_rank"), settings.showRank(), mouseX, mouseY);
+            renderSettingRow(gg, SETTING_SHOW_STATS, key("setting.show_stats"), settings.showStats(), mouseX, mouseY);
+            renderSettingRow(gg, SETTING_SHOW_MATCH_HISTORY, key("setting.show_match_history"), settings.showMatchHistory(), mouseX, mouseY);
+            renderSettingRow(gg, SETTING_JOIN_LEADERBOARDS, key("setting.join_leaderboards"), settings.joinLeaderboards(), mouseX, mouseY);
+            if (!this.payload.editableSettings()) {
+                drawTrimmed(gg, text("settings.not_editable"), this.leftPos + 100, this.topPos + 173, 194, 0xBFD6DE);
+            }
         }
     }
 
@@ -572,6 +588,16 @@ public class PvpStatsScreen extends Screen {
             blit(gg, TOGGLE_HOVER, toggleX, y + 3);
         }
         drawTrimmed(gg, text(labelKey), x + 8, y + 5, rect.w - 44, this.payload.editableSettings() ? 0xD8E8ED : 0x7898A4);
+    }
+
+    private void renderChoiceSettingRow(GuiGraphics gg, Rect rect, String labelKey, String value, int mouseX, int mouseY) {
+        int x = this.leftPos + rect.x;
+        int y = this.topPos + rect.y;
+        if (isHovering(rect, mouseX, mouseY)) {
+            gg.fill(x + 3, y + 2, x + rect.w - 3, y + rect.h - 2, 0x66304A55);
+        }
+        drawTrimmed(gg, text(labelKey), x + 8, y + 5, 104, 0xD8E8ED);
+        drawCenteredTrimmed(gg, "< " + value + " >", x + 116, y + 5, rect.w - 124, 0xE9FDFF);
     }
 
     private void renderFooter(GuiGraphics gg) {
@@ -713,10 +739,20 @@ public class PvpStatsScreen extends Screen {
     }
 
     private void renderSettingsTooltip(GuiGraphics gg, int mouseX, int mouseY) {
-        if (isHovering(new Rect(6, 64, 60, MODE_ROW_HEIGHT), mouseX, mouseY)) {
+        if (isHovering(SETTINGS_CATEGORY_PRIVACY, mouseX, mouseY)) {
             renderWrappedTooltip(gg, List.of(
                     Component.translatable(key("settings.category.privacy.tooltip"))
             ), mouseX, mouseY);
+            return;
+        }
+        if (isHovering(SETTINGS_CATEGORY_DISPLAY, mouseX, mouseY)) {
+            renderWrappedTooltip(gg, List.of(
+                    Component.translatable(key("settings.category.display.tooltip"))
+            ), mouseX, mouseY);
+            return;
+        }
+        if (this.settingsCategory == SettingsCategory.DISPLAY) {
+            renderSettingTooltip(gg, SETTING_LOADOUT_THEME, "setting.loadout_theme", mouseX, mouseY);
             return;
         }
         if (renderSettingTooltip(gg, SETTING_SHOW_RANK, "setting.show_rank", mouseX, mouseY)
@@ -854,8 +890,21 @@ public class PvpStatsScreen extends Screen {
     }
 
     private boolean handleSettingsClick(double mouseX, double mouseY) {
-        if (isHovering(new Rect(6, 64, 60, MODE_ROW_HEIGHT), mouseX, mouseY)) {
+        if (isHovering(SETTINGS_CATEGORY_PRIVACY, mouseX, mouseY)) {
+            this.settingsCategory = SettingsCategory.PRIVACY;
             return true;
+        }
+        if (isHovering(SETTINGS_CATEGORY_DISPLAY, mouseX, mouseY)) {
+            this.settingsCategory = SettingsCategory.DISPLAY;
+            return true;
+        }
+
+        if (this.settingsCategory == SettingsCategory.DISPLAY) {
+            if (isHovering(SETTING_LOADOUT_THEME, mouseX, mouseY)) {
+                cycleLoadoutTheme();
+                return true;
+            }
+            return false;
         }
 
         if (!this.payload.editableSettings()) {
@@ -918,6 +967,16 @@ public class PvpStatsScreen extends Screen {
 
     private void submitSettings(PlayerPrivacySettings settings) {
         PvpStatsClient.updatePrivacySettings(settings);
+    }
+
+    private void cycleLoadoutTheme() {
+        ClientConfig.LoadoutThemeMode[] modes = ClientConfig.LoadoutThemeMode.values();
+        ClientConfig.LoadoutThemeMode current = ClientConfig.LOADOUT_THEME_MODE.get();
+        ClientConfig.LOADOUT_THEME_MODE.set(modes[(current.ordinal() + 1) % modes.length]);
+    }
+
+    private static String loadoutThemeLabel(ClientConfig.LoadoutThemeMode mode) {
+        return text("setting.loadout_theme.value." + mode.name().toLowerCase(Locale.ROOT));
     }
 
     private void onSearchChanged(String value) {
@@ -1284,6 +1343,11 @@ public class PvpStatsScreen extends Screen {
             this.rect = rect;
             this.key = key;
         }
+    }
+
+    private enum SettingsCategory {
+        PRIVACY,
+        DISPLAY
     }
 
     private enum HistoryFilter {

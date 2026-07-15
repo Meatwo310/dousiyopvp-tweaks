@@ -2,6 +2,7 @@ package com.dousiyo.dpvptweaks.command;
 
 import com.dousiyo.dpvptweaks.loadout.LoadoutDataManager;
 import com.dousiyo.dpvptweaks.loadout.LoadoutSessionManager;
+import com.dousiyo.dpvptweaks.loadout.RandomLoadoutProfileManager;
 import com.dousiyo.dpvptweaks.network.CloseLoadoutGuiPacket;
 import com.dousiyo.dpvptweaks.network.LoadoutGuiNetwork;
 import com.mojang.brigadier.Command;
@@ -23,6 +24,23 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class DpvpTweaksLoadoutCommand {
+    static LiteralArgumentBuilder<CommandSourceStack> buildDirectCommand() {
+        return Commands.literal("dploadout")
+                .requires(s -> s.hasPermission(2))
+                .then(Commands.literal("open")
+                        .then(Commands.argument("set", StringArgumentType.word())
+                                .suggests((ctx, suggestions) -> SharedSuggestionProvider.suggest(
+                                        LoadoutDataManager.setIds().stream().map(ResourceLocation::getPath), suggestions))
+                                .then(Commands.argument("players", EntityArgument.players())
+                                        .executes(DpvpTweaksLoadoutCommand::openNamedLoadoutSet))))
+                // Keep the original datapack syntax working: dploadout <set> <players>
+                .then(Commands.argument("set", StringArgumentType.word())
+                        .suggests((ctx, suggestions) -> SharedSuggestionProvider.suggest(
+                                LoadoutDataManager.setIds().stream().map(ResourceLocation::getPath), suggestions))
+                        .then(Commands.argument("players", EntityArgument.players())
+                                .executes(DpvpTweaksLoadoutCommand::openNamedLoadoutSet)))
+                .then(randomCommand());
+    }
     static void register(LiteralArgumentBuilder<CommandSourceStack> builder, RegisterCommandsEvent event) {
         builder.then(Commands.literal("loadout")
                 .requires(s -> s.hasPermission(2))
@@ -38,6 +56,7 @@ public class DpvpTweaksLoadoutCommand {
                         .executes(DpvpTweaksLoadoutCommand::listLoadoutDefinitions))
                 .then(Commands.literal("validate")
                         .executes(DpvpTweaksLoadoutCommand::validateLoadoutDefinitions))
+                .then(randomCommand())
                 .then(Commands.argument("players", EntityArgument.players())
                         .executes(DpvpTweaksLoadoutCommand::openTbLoadoutGui))
                 .then(Commands.literal("tb")
@@ -50,6 +69,31 @@ public class DpvpTweaksLoadoutCommand {
                         .then(Commands.argument("players", EntityArgument.players())
                                 .executes(DpvpTweaksLoadoutCommand::closeLoadoutGui)))
         );
+    }
+
+    private static LiteralArgumentBuilder<CommandSourceStack> randomCommand() {
+        return Commands.literal("random")
+                .then(Commands.literal("save")
+                        .then(Commands.argument("profile", StringArgumentType.word())
+                                .then(Commands.literal("main")
+                                        .executes(context -> saveRandomPool(context, RandomLoadoutProfileManager.Pool.MAIN)))
+                                .then(Commands.literal("slot2")
+                                        .executes(context -> saveRandomPool(context, RandomLoadoutProfileManager.Pool.SLOT2)))));
+    }
+
+    private static int saveRandomPool(CommandContext<CommandSourceStack> context, RandomLoadoutProfileManager.Pool pool)
+            throws CommandSyntaxException {
+        ServerPlayer player = context.getSource().getPlayerOrException();
+        String profile = StringArgumentType.getString(context, "profile");
+        RandomLoadoutProfileManager.SaveResult result = RandomLoadoutProfileManager.saveFromInventory(player, profile, pool);
+        if (!result.valid()) {
+            context.getSource().sendFailure(Component.literal(result.error()));
+            return 0;
+        }
+        context.getSource().sendSuccess(() -> Component.literal(
+                "ランダム武器プロファイル '" + profile + "' の " + pool.jsonName() + " にTaCZ銃を "
+                        + result.count() + " 丁保存しました。"), true);
+        return Command.SINGLE_SUCCESS;
     }
 
     private static int openTbLoadoutGui(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
@@ -68,7 +112,7 @@ public class DpvpTweaksLoadoutCommand {
             return 0;
         }
 
-        return openLoadoutSet(ctx, setId, LoadoutDataManager.getSet(setId) != null && LoadoutDataManager.getSet(setId).isMiniLayout());
+        return openLoadoutSet(ctx, setId, false);
     }
 
     private static int openLoadoutSet(CommandContext<CommandSourceStack> ctx, ResourceLocation setId, boolean mini) throws CommandSyntaxException {

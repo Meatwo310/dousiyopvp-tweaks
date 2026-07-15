@@ -4,6 +4,7 @@ import com.dousiyo.dpvptweaks.DpvpTweaks;
 import com.dousiyo.dpvptweaks.config.ServerConfig;
 import com.dousiyo.dpvptweaks.loadout.LoadoutDataManager;
 import com.dousiyo.dpvptweaks.loadout.LoadoutSessionManager;
+import com.dousiyo.dpvptweaks.arsenal.ArsenalMatchManager;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.scores.Team;
@@ -22,6 +23,7 @@ public class DeathTeamActions {
         if (player.level().isClientSide) {
             return;
         }
+        if (ArsenalMatchManager.isParticipant(player)) return;
 
         String teamName = getTeamName(player);
         if (teamName == null) {
@@ -41,6 +43,7 @@ public class DeathTeamActions {
         if (player.level().isClientSide) {
             return;
         }
+        if (ArsenalMatchManager.isParticipant(player)) return;
 
         String teamName = getTeamName(player);
         if (teamName == null) {
@@ -50,12 +53,20 @@ public class DeathTeamActions {
         if (matchesConfiguredTeam(teamName, ServerConfig.SET_SPECTATOR_ON_DEATH_TEAMS.get())) {
             player.setGameMode(GameType.SPECTATOR);
         }
+        int separator = teamName.indexOf('.');
+        if (separator > 0) {
+            var setId = LoadoutDataManager.findSetIdByPath(teamName.substring(0, separator));
+            if (setId != null) {
+                LoadoutSessionManager.open(player, setId);
+                return;
+            }
+        }
         if (matchesConfiguredTeam(teamName, ServerConfig.OPEN_MINI_LOADOUT_ON_RESPAWN_TEAMS.get())) {
             LoadoutSessionManager.open(player, LoadoutDataManager.DEFAULT_MINI_LOADOUT_SET, true);
             return;
         }
         if (matchesConfiguredTeam(teamName, ServerConfig.OPEN_LOADOUT_ON_RESPAWN_TEAMS.get())) {
-            LoadoutSessionManager.open(player, LoadoutDataManager.DEFAULT_LOADOUT_SET, false);
+            LoadoutSessionManager.open(player, LoadoutDataManager.DEFAULT_LOADOUT_SET);
         }
     }
 

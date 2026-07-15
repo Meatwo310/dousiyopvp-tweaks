@@ -1,14 +1,23 @@
 package com.dousiyo.dpvptweaks.timer.client;
 
+import com.dousiyo.dpvptweaks.DpvpTweaks;
+import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 
 public final class CountdownHudOverlay {
-    private static final int PANEL_WIDTH = 264;
-    private static final int PANEL_HEIGHT = 98;
-    private static final int BAR_WIDTH = 208;
-    private static final int BAR_HEIGHT = 8;
+    private static final ResourceLocation FRAME_TEXTURE =
+            new ResourceLocation(DpvpTweaks.MODID, "textures/gui/timer/countdown_frame.png");
+
+    private static final int TEXTURE_WIDTH = 640;
+    private static final int TEXTURE_HEIGHT = 208;
+    private static final int PANEL_WIDTH = 320;
+    private static final int PANEL_HEIGHT = 104;
+    private static final int BAR_X = 72;
+    private static final int BAR_Y = 91;
+    private static final int BAR_WIDTH = 176;
 
     private CountdownHudOverlay() {}
 
@@ -24,134 +33,115 @@ public final class CountdownHudOverlay {
         }
 
         int x = (screenW - PANEL_WIDTH) / 2;
-        int y = (screenH - PANEL_HEIGHT) / 2 - 8;
-
+        int y = (screenH - PANEL_HEIGHT) / 2 - 12;
         if (ClientCountdownState.isFinished()) {
             renderFinish(gui, mc, x, y);
-            return;
+        } else {
+            renderRunning(gui, mc, x, y);
         }
-
-        renderRunning(gui, mc, x, y);
     }
 
     private static void renderRunning(GuiGraphics gui, Minecraft mc, int x, int y) {
-        float intro = ClientCountdownState.getRunningAnimProgress(mc);
-        int rise = (int) ((1.0F - intro) * 18.0F);
-        int drawY = y - rise;
+        float intro = easeOutCubic(ClientCountdownState.getRunningAnimProgress(mc));
+        float frameScale = 0.94F + intro * 0.06F;
 
-        int panelAlpha = 170 + (int) (intro * 55.0F);
-        int panelColor = (clamp(panelAlpha) << 24) | 0x08111A;
-        int borderColor = 0xFF69D36E;
-        int innerColor = 0xFF162534;
-        drawPanel(gui, x, drawY, panelColor, borderColor, innerColor);
+        gui.pose().pushPose();
+        gui.pose().translate(x + PANEL_WIDTH / 2.0F, y + PANEL_HEIGHT / 2.0F, 0.0F);
+        gui.pose().scale(frameScale, frameScale, 1.0F);
+        gui.pose().translate(-(x + PANEL_WIDTH / 2.0F), -(y + PANEL_HEIGHT / 2.0F), 0.0F);
 
-        long now = mc.level != null ? mc.level.getGameTime() : 0L;
+        gui.fill(x + 20, y + 29, x + PANEL_WIDTH - 20, y + 85, 0xB0060D12);
+        drawFrame(gui, x, y, intro);
+
         int ticks = ClientCountdownState.getDisplayTicks(mc);
         int seconds = ClientCountdownState.getDisplaySeconds(mc);
         int durationTicks = Math.max(1, ClientCountdownState.getDurationTicks());
-        float ratio = Math.max(0.0F, Math.min(1.0F, ticks / (float) durationTicks));
-        int barFill = Math.max(0, Math.min(BAR_WIDTH, Math.round(BAR_WIDTH * ratio)));
         int accentColor = resolveAccentColor(seconds);
-        float pulse = 1.0F + (seconds <= 5 ? (float) Math.sin(now * 0.42F) * 0.06F : 0.0F);
+        int barFill = Math.round(BAR_WIDTH * Math.max(0.0F, Math.min(1.0F, ticks / (float) durationTicks)));
 
-        int barX = x + (PANEL_WIDTH - BAR_WIDTH) / 2;
-        int barY = drawY + PANEL_HEIGHT - 16;
-        gui.fill(barX, barY, barX + BAR_WIDTH, barY + BAR_HEIGHT, 0xFF101B27);
-        gui.fill(barX + 1, barY + 1, barX + BAR_WIDTH - 1, barY + BAR_HEIGHT - 1, 0xFF1C2D40);
+        gui.fill(x + BAR_X, y + BAR_Y, x + BAR_X + BAR_WIDTH, y + BAR_Y + 2, 0xDD101A20);
         if (barFill > 0) {
-            gui.fill(barX + 1, barY + 1, barX + Math.min(BAR_WIDTH - 1, barFill), barY + BAR_HEIGHT - 1, accentColor);
+            gui.fill(x + BAR_X, y + BAR_Y, x + BAR_X + barFill, y + BAR_Y + 2, accentColor);
         }
 
-        String topLabel = "開始まで";
-        String bottomLabel = seconds > 5 ? "まもなく開始" : "開始準備";
-        Component number = Component.literal(seconds > 5 ? String.format("%02d", seconds) : Integer.toString(seconds));
+        String header = seconds <= 5 ? "FINAL COUNT" : "COUNTDOWN";
+        int headerX = x + (PANEL_WIDTH - mc.font.width(header)) / 2;
+        gui.drawString(mc.font, header, headerX, y + 18, 0xFF91A7B4, false);
 
-        int topWidth = mc.font.width(topLabel);
-        gui.drawString(mc.font, topLabel, x + (PANEL_WIDTH - topWidth) / 2, drawY + 12, 0xFF91A7BA, false);
-
-        float numberScale = seconds > 5 ? 3.05F : 4.2F * pulse;
+        long now = mc.level != null ? mc.level.getGameTime() : 0L;
+        float pulse = seconds <= 5 ? (float) Math.sin(now * 0.62F) * 0.10F : 0.0F;
+        float numberScale = (seconds <= 5 ? 4.7F : 4.15F) + pulse;
+        Component number = Component.literal(seconds > 9 ? String.format("%02d", seconds) : Integer.toString(seconds));
         int numberWidth = (int) Math.ceil(mc.font.width(number) * numberScale);
-        int numberX = x + (PANEL_WIDTH - numberWidth) / 2;
+
         gui.pose().pushPose();
-        gui.pose().translate(numberX, drawY + 26, 0.0F);
+        gui.pose().translate(x + (PANEL_WIDTH - numberWidth) / 2.0F, y + 36, 0.0F);
         gui.pose().scale(numberScale, numberScale, 1.0F);
         gui.drawString(mc.font, number, 0, 0, accentColor, true);
         gui.pose().popPose();
 
-        int bottomWidth = mc.font.width(bottomLabel);
-        gui.drawString(mc.font, bottomLabel, x + (PANEL_WIDTH - bottomWidth) / 2, drawY + 74, 0xFF6F8296, false);
+        String status = seconds <= 3 ? "GET READY" : "STANDBY";
+        int statusX = x + (PANEL_WIDTH - mc.font.width(status)) / 2;
+        gui.drawString(mc.font, status, statusX, y + 77, 0xFF607785, false);
 
-        drawSideMarkers(gui, x, drawY, accentColor);
+        gui.fill(x + 42, y + 50, x + 59, y + 52, accentColor);
+        gui.fill(x + PANEL_WIDTH - 59, y + 50, x + PANEL_WIDTH - 42, y + 52, accentColor);
+        gui.pose().popPose();
     }
 
     private static void renderFinish(GuiGraphics gui, Minecraft mc, int x, int y) {
         float progress = ClientCountdownState.getFinishAnimProgress(mc);
-        int alpha = clamp(255 - (int) (progress * 255.0F));
-        if (alpha <= 0) {
-            return;
-        }
-        int fillColor = (alpha << 24) | 0x0A1A10;
-        int borderColor = (alpha << 24) | 0x7AE27C;
-        int innerColor = (alpha << 24) | 0x13271A;
-        drawPanel(gui, x, y, fillColor, borderColor, innerColor);
+        float alpha = 1.0F - progress;
+        float scale = 1.0F + progress * 0.10F;
 
-        int stripeAlpha = clamp((int) (alpha * 0.35F));
-        gui.fill(x + 16, y + 18, x + PANEL_WIDTH - 16, y + 20, (stripeAlpha << 24) | 0x63D96D);
-        gui.fill(x + 16, y + PANEL_HEIGHT - 20, x + PANEL_WIDTH - 16, y + PANEL_HEIGHT - 18, (stripeAlpha << 24) | 0x63D96D);
-
-        Component title = Component.literal("開始");
-        Component subtitle = Component.literal("スタート！");
-
-        float titleScale = 3.0F;
-        int titleWidth = (int) Math.ceil(mc.font.width(title) * titleScale);
-        int titleX = x + (PANEL_WIDTH - titleWidth) / 2;
         gui.pose().pushPose();
-        gui.pose().translate(titleX, y + 24, 0.0F);
+        gui.pose().translate(x + PANEL_WIDTH / 2.0F, y + PANEL_HEIGHT / 2.0F, 0.0F);
+        gui.pose().scale(scale, scale, 1.0F);
+        gui.pose().translate(-(x + PANEL_WIDTH / 2.0F), -(y + PANEL_HEIGHT / 2.0F), 0.0F);
+        gui.fill(x + 20, y + 29, x + PANEL_WIDTH - 20, y + 85,
+                (clamp(Math.round(alpha * 184.0F)) << 24) | 0x061116);
+        drawFrame(gui, x, y, alpha);
+
+        Component title = Component.literal("GO!");
+        float titleScale = 4.8F;
+        int titleWidth = (int) Math.ceil(mc.font.width(title) * titleScale);
+        int color = (clamp(Math.round(alpha * 255.0F)) << 24) | 0xE9FDFF;
+        gui.pose().pushPose();
+        gui.pose().translate(x + (PANEL_WIDTH - titleWidth) / 2.0F, y + 37, 0.0F);
         gui.pose().scale(titleScale, titleScale, 1.0F);
-        gui.drawString(mc.font, title, 0, 0, (alpha << 24) | 0xF4FFF4, true);
+        gui.drawString(mc.font, title, 0, 0, color, true);
         gui.pose().popPose();
 
+        String subtitle = "START";
         int subtitleX = x + (PANEL_WIDTH - mc.font.width(subtitle)) / 2;
-        gui.drawString(mc.font, subtitle, subtitleX, y + 72, (alpha << 24) | 0xBFEEC5, false);
+        gui.drawString(mc.font, subtitle, subtitleX, y + 79,
+                (clamp(Math.round(alpha * 255.0F)) << 24) | 0x42E4ED, false);
+        gui.pose().popPose();
     }
 
-    private static void drawPanel(GuiGraphics gui, int x, int y, int fillColor, int borderColor, int innerColor) {
-        gui.fill(x, y, x + PANEL_WIDTH, y + PANEL_HEIGHT, fillColor);
-        gui.fill(x + 4, y + 4, x + PANEL_WIDTH - 4, y + PANEL_HEIGHT - 4, innerColor);
-
-        gui.fill(x, y, x + PANEL_WIDTH, y + 2, borderColor);
-        gui.fill(x, y + PANEL_HEIGHT - 2, x + PANEL_WIDTH, y + PANEL_HEIGHT, borderColor);
-        gui.fill(x, y, x + 2, y + PANEL_HEIGHT, borderColor);
-        gui.fill(x + PANEL_WIDTH - 2, y, x + PANEL_WIDTH, y + PANEL_HEIGHT, borderColor);
-
-        gui.fill(x + 12, y + 10, x + 54, y + 12, borderColor);
-        gui.fill(x + PANEL_WIDTH - 54, y + 10, x + PANEL_WIDTH - 12, y + 12, borderColor);
-        gui.fill(x + 12, y + PANEL_HEIGHT - 12, x + 54, y + PANEL_HEIGHT - 10, borderColor);
-        gui.fill(x + PANEL_WIDTH - 54, y + PANEL_HEIGHT - 12, x + PANEL_WIDTH - 12, y + PANEL_HEIGHT - 10, borderColor);
-    }
-
-    private static void drawSideMarkers(GuiGraphics gui, int x, int y, int accentColor) {
-        int left = x + 18;
-        int right = x + PANEL_WIDTH - 18;
-        int midY = y + 49;
-
-        gui.fill(left, midY - 12, left + 2, midY + 12, accentColor);
-        gui.fill(left, midY - 12, left + 12, midY - 10, accentColor);
-        gui.fill(left, midY + 10, left + 12, midY + 12, accentColor);
-
-        gui.fill(right - 2, midY - 12, right, midY + 12, accentColor);
-        gui.fill(right - 12, midY - 12, right, midY - 10, accentColor);
-        gui.fill(right - 12, midY + 10, right, midY + 12, accentColor);
+    private static void drawFrame(GuiGraphics gui, int x, int y, float alpha) {
+        RenderSystem.enableBlend();
+        RenderSystem.defaultBlendFunc();
+        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, Math.max(0.0F, Math.min(1.0F, alpha)));
+        gui.blit(FRAME_TEXTURE, x, y, PANEL_WIDTH, PANEL_HEIGHT,
+                0.0F, 0.0F, TEXTURE_WIDTH, TEXTURE_HEIGHT, TEXTURE_WIDTH, TEXTURE_HEIGHT);
+        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+        RenderSystem.disableBlend();
     }
 
     private static int resolveAccentColor(int seconds) {
         if (seconds <= 2) {
-            return 0xFFFF6B57;
+            return 0xFFFF594D;
         }
         if (seconds <= 5) {
-            return 0xFFFFC857;
+            return 0xFFFFB82E;
         }
-        return 0xFF69D36E;
+        return 0xFF2DDBE8;
+    }
+
+    private static float easeOutCubic(float value) {
+        float inverse = 1.0F - Math.max(0.0F, Math.min(1.0F, value));
+        return 1.0F - inverse * inverse * inverse;
     }
 
     private static int clamp(int value) {

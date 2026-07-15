@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "dpvptweaks:item/random_loadout_icon"
+  }
+}

@@ -9,6 +9,7 @@
     "lightmanscurrency.CommandPlayerTradingMixin",
     "minecraft.DamageTypeMixin",
     "minecraft.FunctionCommandMixin",
+    "minecraft.ItemStackAdventurePlacementMixin",
     "starterkit.GearFunctionsMixin",
     "starterkit.StarterServerEventsMixin"
   ],
