@@ -4,9 +4,11 @@ import com.dousiyo.dpvptweaks.DpvpTweaks;
 import com.dousiyo.dpvptweaks.network.DamageFeedbackPacket;
 import com.dousiyo.dpvptweaks.network.SecretOperationsNetwork;
 import com.tacz.guns.api.event.common.EntityHurtByGunEvent;
+import com.tacz.guns.api.event.common.EntityKillByGunEvent;
 import com.tacz.guns.api.event.common.GunDamageSourcePart;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraftforge.event.entity.living.LivingDamageEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
@@ -24,21 +26,33 @@ import java.util.UUID;
 @Mod.EventBusSubscriber(modid = DpvpTweaks.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public final class SecretOperationsDamageFeedbackEvents {
     private static final Map<UUID, Float> ABSORPTION_BEFORE_DAMAGE = new HashMap<>();
-    private static final Map<DamageSource, Boolean> TACZ_HEADSHOT_SOURCES = new IdentityHashMap<>();
+    private static final Map<Entity, PendingTaczHit> TACZ_HITS = new IdentityHashMap<>();
+    private static final Map<DamageSource, PendingTaczHit> TACZ_HITS_BY_SOURCE = new IdentityHashMap<>();
 
     private SecretOperationsDamageFeedbackEvents() {}
 
-    @SubscribeEvent(priority = EventPriority.LOWEST)
-    public static void rememberTaczHeadshot(EntityHurtByGunEvent.Pre event) {
-        if (!(event.getAttacker() instanceof ServerPlayer) || !event.isHeadShot()) return;
-        TACZ_HEADSHOT_SOURCES.put(event.getDamageSource(GunDamageSourcePart.NON_ARMOR_PIERCING), true);
-        TACZ_HEADSHOT_SOURCES.put(event.getDamageSource(GunDamageSourcePart.ARMOR_PIERCING), true);
+    @SubscribeEvent(priority = EventPriority.LOWEST, receiveCanceled = true)
+    public static void beginTaczHit(EntityHurtByGunEvent.Pre event) {
+        if (event.isCanceled() || !(event.getAttacker() instanceof ServerPlayer attacker)
+                || !DamageFeedbackManager.isEnabled()) return;
+        PendingTaczHit hit = new PendingTaczHit(attacker, event.isHeadShot());
+        TACZ_HITS.put(event.getBullet(), hit);
+        TACZ_HITS_BY_SOURCE.put(event.getDamageSource(GunDamageSourcePart.NON_ARMOR_PIERCING), hit);
+        TACZ_HITS_BY_SOURCE.put(event.getDamageSource(GunDamageSourcePart.ARMOR_PIERCING), hit);
     }
 
     @SubscribeEvent(priority = EventPriority.LOWEST)
-    public static void clearTaczHeadshot(EntityHurtByGunEvent.Post event) {
-        TACZ_HEADSHOT_SOURCES.remove(event.getDamageSource(GunDamageSourcePart.NON_ARMOR_PIERCING));
-        TACZ_HEADSHOT_SOURCES.remove(event.getDamageSource(GunDamageSourcePart.ARMOR_PIERCING));
+    public static void finishTaczHit(EntityHurtByGunEvent.Post event) {
+        finishTaczHit(event.getBullet(),
+                event.getDamageSource(GunDamageSourcePart.NON_ARMOR_PIERCING),
+                event.getDamageSource(GunDamageSourcePart.ARMOR_PIERCING));
+    }
+
+    @SubscribeEvent(priority = EventPriority.LOWEST)
+    public static void finishFatalTaczHit(EntityKillByGunEvent event) {
+        finishTaczHit(event.getBullet(),
+                event.getDamageSource(GunDamageSourcePart.NON_ARMOR_PIERCING),
+                event.getDamageSource(GunDamageSourcePart.ARMOR_PIERCING));
     }
 
     @SubscribeEvent(priority = EventPriority.LOWEST, receiveCanceled = true)
@@ -60,18 +74,49 @@ public final class SecretOperationsDamageFeedbackEvents {
         float shieldDamage = absorptionBefore == null ? 0.0F
                 : Math.max(0.0F, absorptionBefore - victim.getAbsorptionAmount());
         if (healthDamage <= 0.0F && shieldDamage <= 0.0F) return;
-        boolean headshot = TACZ_HEADSHOT_SOURCES.containsKey(event.getSource());
+
+        PendingTaczHit taczHit = TACZ_HITS_BY_SOURCE.get(event.getSource());
+        if (taczHit != null) {
+            taczHit.add(victim, healthDamage, shieldDamage);
+            return;
+        }
 
         SecretOperationsNetwork.CHANNEL.send(PacketDistributor.PLAYER.with(() -> attacker),
-                new DamageFeedbackPacket(victim.getId(), healthDamage, shieldDamage, headshot));
+                new DamageFeedbackPacket(victim.getId(), healthDamage, shieldDamage, false));
+    }
+
+    private static void finishTaczHit(Entity bullet, DamageSource nonArmorPiercing, DamageSource armorPiercing) {
+        PendingTaczHit hit = TACZ_HITS.remove(bullet);
+        TACZ_HITS_BY_SOURCE.remove(nonArmorPiercing);
+        TACZ_HITS_BY_SOURCE.remove(armorPiercing);
+        if (hit == null || hit.victim == null
+                || (hit.healthDamage <= 0.0F && hit.shieldDamage <= 0.0F)) return;
+        SecretOperationsNetwork.CHANNEL.send(PacketDistributor.PLAYER.with(() -> hit.attacker),
+                new DamageFeedbackPacket(hit.victim.getId(), hit.healthDamage, hit.shieldDamage, hit.headshot));
     }
 
     private static boolean isEnemySecretOperationsHit(Object sourceEntity, LivingEntity victim) {
         if (!(sourceEntity instanceof ServerPlayer attacker) || attacker == victim) return false;
-        boolean secretOperationsActive = victim instanceof ServerPlayer victimPlayer
-                && SecretOperationsManager.isActive(attacker)
-                && SecretOperationsManager.isActive(victimPlayer);
-        if (!DamageFeedbackManager.isEnabled(attacker) && !secretOperationsActive) return false;
+        if (!DamageFeedbackManager.isEnabled()) return false;
         return !attacker.isAlliedTo(victim);
+    }
+
+    private static final class PendingTaczHit {
+        private final ServerPlayer attacker;
+        private final boolean headshot;
+        private LivingEntity victim;
+        private float healthDamage;
+        private float shieldDamage;
+
+        private PendingTaczHit(ServerPlayer attacker, boolean headshot) {
+            this.attacker = attacker;
+            this.headshot = headshot;
+        }
+
+        private void add(LivingEntity victim, float healthDamage, float shieldDamage) {
+            this.victim = victim;
+            this.healthDamage += healthDamage;
+            this.shieldDamage += shieldDamage;
+        }
     }
 }

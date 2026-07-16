@@ -7,7 +7,6 @@ import com.dousiyo.dpvptweaks.entity.ModEntities;
 import com.dousiyo.dpvptweaks.effect.ModEffects;
 import com.dousiyo.dpvptweaks.item.ModCreativeModeTabs;
 import com.dousiyo.dpvptweaks.item.ModItems;
-import com.dousiyo.dpvptweaks.network.CaptureNetwork;
 import com.dousiyo.dpvptweaks.network.ArsenalNetwork;
 import com.dousiyo.dpvptweaks.network.DousiyoServerMainReceiverNetwork;
 import com.dousiyo.dpvptweaks.network.FunctionPaletteNetwork;
@@ -40,7 +39,7 @@ public class DpvpTweaks {
     private static final String DOUSEIYO_SERVER_MODID = "dousiyoserver";
 
     public static final Set<String> ALLOWED_MODS = Set.of(
-            "appleskin", "architectury", "armourers_workshop", "ashvehicle", "chat_heads", "chloride", "cloth_config", "collective", "commongroovylibrary", "configured", "controlling", "curios", "damage_indicator", "dpvptweaks", "dragonrise_reforge", "dummmmmmy", "eatinganimation", "embeddium", "embeddium_extra", "endlessammo", "entityculling", "extremesoundmuffler", "ferritecore", "forge", "geckolib", "gml", "guccivuitton", "immediatelyfast", "javd", "journeymap", "journeymapteams", "jpy", "kotlinforforge", "kubejs", "lightmanscurrency", "lrarmor", "lrtactical", "maxstuff", "meatwo310", "minecraft", "mixinsquared", "modernfix", "modernui", "moonlight", "mousetweaks", "notenoughanimations", "notenoughcrashes", "oculus", "packetfixer", "parcool", "parcool_compat_addon", "playeranimator", "presencefootsteps", "puzzlesaccessapi", "puzzleslib", "rhino", "roughtweaks", "rubidium", "seamless_loading_screen", "searchables", "shouldersurfing", "softdeepslate", "sound_physics_remastered", "spotmod", "starterkit", "stylisheffects", "superbwarfare", "tacz", "tacz_presence", "taczadditions", "taczlabs", "tacztweaks", "takkit", "timestamp_chat", "tp_shooting", "transition", "trender", "trenzalore", "tsukichat", "untranslateditems", "waterdripsound", "xlpackets", "yet_another_config_lib_v3"
+            "airstrike", "appleskin", "architectury", "armourers_workshop", "ashvehicle", "chat_heads", "chloride", "cloth_config", "collective", "commongroovylibrary", "configured", "controlling", "curios", "damage_indicator", "dpvptweaks", "dragonrise_reforge", "dummmmmmy", "eatinganimation", "embeddium", "embeddium_extra", "endlessammo", "entityculling", "extremesoundmuffler", "ferritecore", "forge", "geckolib", "gml", "guccivuitton", "immediatelyfast", "javd", "journeymap", "journeymapteams", "jpy", "kotlinforforge", "kubejs", "lightmanscurrency", "lrarmor", "lrtactical", "maxstuff", "meatwo310", "minecraft", "mixinsquared", "modernfix", "modernui", "moonlight", "mousetweaks", "notenoughanimations", "notenoughcrashes", "oculus", "packetfixer", "parcool", "parcool_compat_addon", "playeranimator", "presencefootsteps", "puzzlesaccessapi", "puzzleslib", "rhino", "roughtweaks", "rubidium", "seamless_loading_screen", "searchables", "shouldersurfing", "softdeepslate", "sound_physics_remastered", "spotmod", "starterkit", "stylisheffects", "superbwarfare", "tacz", "tacz_presence", "taczadditions", "taczlabs", "tacztweaks", "takkit", "timestamp_chat", "tp_shooting", "transition", "trender", "trenzalore", "tsukichat", "untranslateditems", "waterdripsound", "xlpackets", "yet_another_config_lib_v3"
 
     );
 
@@ -61,7 +60,6 @@ public class DpvpTweaks {
         ModCreativeModeTabs.register(modEventBus);
         ModEntities.register(modEventBus);
         ModEffects.register(modEventBus);
-        CaptureNetwork.register();
         ArsenalNetwork.register();
         LoadoutGuiNetwork.register();
         SecretOperationsNetwork.register();

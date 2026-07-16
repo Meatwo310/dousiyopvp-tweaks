@@ -11,6 +11,7 @@ import com.dousiyo.dpvptweaks.temporarybuilding.TemporaryBuildingManager;
 import com.dousiyo.dpvptweaks.arsenal.ArsenalMatchManager;
 import com.dousiyo.dpvptweaks.temporarybuilding.TemporaryBuildingMatchContext;
 import net.minecraft.ChatFormatting;
+import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.game.ClientboundSetTitleTextPacket;
 import net.minecraft.resources.ResourceLocation;
@@ -117,11 +118,13 @@ public final class SecretShowdownManager {
             if (now >= phaseDeadline) {
                 if (redScore == blueScore) {
                     phase = SecretShowdownPhase.OVERTIME;
+                    SecretShowdownSupplyManager.cleanup(server);
                     broadcast(server, Component.literal("OVERTIME - 次のキルで決着").withStyle(ChatFormatting.GOLD));
                     syncAll(server);
                 } else finish(server, redScore > blueScore ? TeamSide.RED : TeamSide.BLUE, false);
             }
         }
+        SecretShowdownSupplyManager.tick(server, now);
         if (phase.running() && now - lastHudSync >= 20L) {
             lastHudSync = now;
             syncAll(server);
@@ -167,6 +170,12 @@ public final class SecretShowdownManager {
     }
 
     @SubscribeEvent
+    public static void playerLogout(PlayerEvent.PlayerLoggedOutEvent event) {
+        if (event.getEntity() instanceof ServerPlayer player)
+            SecretShowdownSupplyManager.cancelForPlayer(player.server, player.getUUID());
+    }
+
+    @SubscribeEvent
     public static void hurt(LivingHurtEvent event) {
         ServerPlayer victim = event.getEntity() instanceof ServerPlayer p ? p : null;
         ServerPlayer attacker = attackingPlayer(event.getSource().getEntity());
@@ -175,6 +184,8 @@ public final class SecretShowdownManager {
         if (victimState != null && (victimState.waiting || victimState.dropProtected)) event.setCanceled(true);
         if (attackerState != null && (attackerState.waiting || attackerState.dropProtected)) event.setCanceled(true);
         if (victimState != null && attackerState != null && victimState.team == attackerState.team) event.setCanceled(true);
+        if (victim != null && !event.isCanceled() && event.getAmount() > 0.0F)
+            SecretShowdownSupplyManager.cancelForPlayer(victim.server, victim.getUUID());
     }
 
     @SubscribeEvent
@@ -182,6 +193,7 @@ public final class SecretShowdownManager {
         if (!(event.getEntity() instanceof ServerPlayer victim)) return;
         Participant victimState = PARTICIPANTS.get(victim.getUUID());
         if (victimState == null || !phase.running()) return;
+        SecretShowdownSupplyManager.cancelForPlayer(victim.server, victim.getUUID());
         event.setCanceled(true);
         victim.setHealth(Math.max(1.0F, victim.getMaxHealth()));
         victim.getFoodData().setFoodLevel(20);
@@ -192,6 +204,7 @@ public final class SecretShowdownManager {
         boolean validKill = attackerState != null && attacker != victim && attackerState.team != victimState.team;
         if (validKill) {
             if (attackerState.team == TeamSide.RED) redScore++; else blueScore++;
+            attackerState.personalPoints++;
             IntelDraftManager.grantEliminationAmmo(attacker);
             if (phase == SecretShowdownPhase.OVERTIME) {
                 finish(victim.server, attackerState.team, false);
@@ -215,6 +228,21 @@ public final class SecretShowdownManager {
         Participant participant = PARTICIPANTS.get(player.getUUID());
         return participant != null && (phase == SecretShowdownPhase.ACTIVE || phase == SecretShowdownPhase.OVERTIME)
                 && !participant.waiting && !participant.dropProtected;
+    }
+
+    public static boolean canOpenSupply(ServerPlayer player) {
+        Participant participant = PARTICIPANTS.get(player.getUUID());
+        return participant != null && phase == SecretShowdownPhase.ACTIVE
+                && !participant.waiting && !participant.dropProtected && player.isAlive();
+    }
+
+    public static boolean addSupplyPoints(ServerPlayer player, int teamPoints, int personalPoints) {
+        Participant participant = PARTICIPANTS.get(player.getUUID());
+        if (participant == null || phase != SecretShowdownPhase.ACTIVE || participant.waiting || participant.dropProtected) return false;
+        if (participant.team == TeamSide.RED) redScore += Math.max(0, teamPoints); else blueScore += Math.max(0, teamPoints);
+        participant.personalPoints += Math.max(0, personalPoints);
+        syncAll(player.server);
+        return true;
     }
 
     public static ActionResult randomize(MinecraftServer server) {
@@ -243,6 +271,8 @@ public final class SecretShowdownManager {
         if (requestedDraftInterval < 1 || requestedDraftInterval > 10) return ActionResult.error("ドラフト間隔は1～10分です");
         SecretOperationsConfig.Validation validation = SecretOperationsConfig.validate(server);
         if (!validation.valid()) return ActionResult.error(validation.error());
+        String supplyError = SecretShowdownSupplyManager.validationError(server, validation);
+        if (supplyError != null) return ActionResult.error(supplyError);
         if (starterGunStack().isEmpty()) return ActionResult.error("TACZのGlock 17 (tacz:glock_17) が見つかりません");
         List<ServerPlayer> eligible = eligible(server);
         if (eligible.size() < 2) return ActionResult.error("参加者が2人以上必要です");
@@ -288,7 +318,9 @@ public final class SecretShowdownManager {
 
     public static ActionResult reload(MinecraftServer server) {
         SecretOperationsConfig.reload();
-        String error = SecretOperationsConfig.error(server);
+        SecretOperationsConfig.Validation validation = SecretOperationsConfig.validate(server);
+        String error = validation.error();
+        if (error == null) error = SecretShowdownSupplyManager.validationError(server, validation);
         return error == null ? ActionResult.ok("設定を再読み込みしました") : ActionResult.error(error);
     }
 
@@ -303,7 +335,9 @@ public final class SecretShowdownManager {
             (entry.getValue() == TeamSide.RED ? red : blue).add(name);
         }
         Collections.sort(red); Collections.sort(blue);
-        String error = SecretOperationsConfig.error(server);
+        SecretOperationsConfig.Validation validation = SecretOperationsConfig.validate(server);
+        String error = validation.error();
+        if (error == null) error = SecretShowdownSupplyManager.validationError(server, validation);
         SecretOperationsNetwork.CHANNEL.send(PacketDistributor.PLAYER.with(() -> player),
                 new OpenSecretOperationsAdminPacket(SecretOperationMode.SHOWDOWN, phase.name(), 0, durationMinutes, draftIntervalMinutes,
                         source.size(), redScore, blueScore, error == null ? "" : error,
@@ -356,6 +390,7 @@ public final class SecretShowdownManager {
         phase = SecretShowdownPhase.ACTIVE;
         phaseDeadline = now + durationMinutes * 60L * 20L;
         nextDraftGrant = now + draftIntervalMinutes * 60L * 20L;
+        SecretShowdownSupplyManager.begin(server, SecretOperationsConfig.validate(server), now);
         for (Participant participant : PARTICIPANTS.values()) {
             ServerPlayer player = server.getPlayerList().getPlayer(participant.id);
             if (player != null && participant.selected && (participant.purpose == DraftPurpose.INITIAL
@@ -479,6 +514,7 @@ public final class SecretShowdownManager {
 
     private static void finish(MinecraftServer server, TeamSide winner, boolean canceled) {
         phase = SecretShowdownPhase.ENDING;
+        SecretShowdownSupplyManager.cleanup(server);
         TemporaryBuildingManager.endMatch(server);
         if (!canceled && winner != null) {
             Component title = Component.literal((winner == TeamSide.RED ? "RED" : "BLUE") + " VICTORY")
@@ -486,6 +522,7 @@ public final class SecretShowdownManager {
             for (ServerPlayer player : server.getPlayerList().getPlayers())
                 if (PARTICIPANTS.containsKey(player.getUUID())) player.connection.send(new ClientboundSetTitleTextPacket(title));
             broadcast(server, Component.literal("最終得点 RED " + redScore + " - " + blueScore + " BLUE"));
+            broadcastPersonalRanking(server);
         } else broadcast(server, Component.literal("SECRET: SHOWDOWNを中止しました").withStyle(ChatFormatting.YELLOW));
 
         List<ServerPlayer> onlineParticipants = new ArrayList<>();
@@ -520,13 +557,13 @@ public final class SecretShowdownManager {
                 ? Math.max(0L, phaseDeadline - now) : 0L;
         SecretOperationsNetwork.CHANNEL.send(PacketDistributor.PLAYER.with(() -> player),
                 new SecretOperationsMatchStatePacket(true, phase, redScore, blueScore, remaining,
-                        participant.pendingTokens, participant.waiting, participant.dropProtected));
+                        participant.personalPoints, participant.pendingTokens, participant.waiting, participant.dropProtected));
         SecretOperationsManager.sync(player);
     }
 
     private static void syncInactive(ServerPlayer player) {
         SecretOperationsNetwork.CHANNEL.send(PacketDistributor.PLAYER.with(() -> player),
-                new SecretOperationsMatchStatePacket(false, SecretShowdownPhase.IDLE, 0, 0, 0, 0, false, false));
+                new SecretOperationsMatchStatePacket(false, SecretShowdownPhase.IDLE, 0, 0, 0, 0, 0, false, false));
         SecretOperationsManager.sync(player);
     }
 
@@ -572,6 +609,34 @@ public final class SecretShowdownManager {
             if (PARTICIPANTS.containsKey(player.getUUID())) player.sendSystemMessage(message);
     }
 
+    static void broadcastSupplyDrop(MinecraftServer server, BlockPos position, ResourceLocation dimension) {
+        broadcast(server, Component.literal("補給物資を投下: " + dimension + " [" + position.getX() + ", "
+                + position.getY() + ", " + position.getZ() + "]").withStyle(ChatFormatting.AQUA));
+    }
+
+    static void broadcastSupplyClaim(ServerPlayer opener, int teamPoints) {
+        Participant participant = PARTICIPANTS.get(opener.getUUID());
+        if (participant == null) return;
+        broadcast(opener.server, Component.literal(opener.getGameProfile().getName() + " が補給物資を確保 ("
+                + participant.team.id.toUpperCase(java.util.Locale.ROOT) + " +" + teamPoints + ")")
+                .withStyle(ChatFormatting.GOLD));
+    }
+
+    private static void broadcastPersonalRanking(MinecraftServer server) {
+        List<Participant> ranking = PARTICIPANTS.values().stream()
+                .sorted(java.util.Comparator.comparingInt((Participant p) -> p.personalPoints).reversed()
+                        .thenComparing(p -> p.id.toString()))
+                .limit(3).toList();
+        if (ranking.isEmpty()) return;
+        broadcast(server, Component.literal("個人ポイントランキング").withStyle(ChatFormatting.GOLD));
+        for (int i = 0; i < ranking.size(); i++) {
+            Participant participant = ranking.get(i);
+            String name = server.getProfileCache().get(participant.id).map(profile -> profile.getName())
+                    .orElse(participant.id.toString().substring(0, 8));
+            broadcast(server, Component.literal((i + 1) + ". " + name + " - " + participant.personalPoints + " PTS"));
+        }
+    }
+
     private static Map<UUID, TeamSide> participantTeams() {
         Map<UUID, TeamSide> result = new LinkedHashMap<>();
         PARTICIPANTS.forEach((id, value) -> result.put(id, value.team));
@@ -594,7 +659,7 @@ public final class SecretShowdownManager {
         final UUID id; final TeamSide team;
         DraftPurpose purpose = DraftPurpose.INITIAL;
         boolean waiting; boolean selected; boolean forcedDraft; boolean dropProtected; boolean sessionReserved;
-        int pendingTokens; int respawnDraftRemaining;
+        int personalPoints; int pendingTokens; int respawnDraftRemaining;
         long personalDraftDeadline; long respawnAt;
         Participant(UUID id, TeamSide team) { this.id = id; this.team = team; }
     }

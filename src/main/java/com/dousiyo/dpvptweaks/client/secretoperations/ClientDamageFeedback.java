@@ -1,11 +1,14 @@
 package com.dousiyo.dpvptweaks.client.secretoperations;
 
+import com.dousiyo.dpvptweaks.config.ClientConfig;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.Iterator;
@@ -31,6 +34,13 @@ public final class ClientDamageFeedback {
     public static void add(int targetEntityId, float healthDamage, float shieldDamage, boolean headshot) {
         if (!isEnabled() || (healthDamage <= 0.0F && shieldDamage <= 0.0F)) return;
         long now = System.currentTimeMillis();
+        Entry newest = ENTRIES.peekLast();
+        if (ClientConfig.DAMAGE_FEEDBACK_MODE.get() == ClientConfig.DamageFeedbackMode.CUMULATIVE
+                && newest != null && newest.targetEntityId == targetEntityId
+                && now - newest.updatedAtMillis < LIFETIME_MILLIS) {
+            newest.accumulate(healthDamage, shieldDamage, headshot, now);
+            return;
+        }
         ENTRIES.forEach(entry -> entry.pushUp(now));
         ENTRIES.addLast(new Entry(targetEntityId, healthDamage, shieldDamage, headshot, now));
         while (ENTRIES.size() > MAX_ENTRIES) ENTRIES.removeFirst();
@@ -101,7 +111,9 @@ public final class ClientDamageFeedback {
 
     private static String format(float damage) {
         if (damage <= 0.0F) return "";
-        return Float.toString(damage);
+        return new BigDecimal(Float.toString(damage))
+                .setScale(1, RoundingMode.DOWN)
+                .toPlainString();
     }
 
     private static int withAlpha(int color, float alpha) {
@@ -115,15 +127,15 @@ public final class ClientDamageFeedback {
     }
 
     private static boolean isEnabled() {
-        return ClientDamageFeedbackState.enabled() || ClientSecretOperationsState.active();
+        return ClientDamageFeedbackState.enabled();
     }
 
     private static final class Entry {
         private final int targetEntityId;
-        private final float healthDamage;
-        private final float shieldDamage;
-        private final boolean headshot;
-        private final long updatedAtMillis;
+        private float healthDamage;
+        private float shieldDamage;
+        private boolean headshot;
+        private long updatedAtMillis;
         private float pushFrom;
         private float pushTarget;
         private long pushStartedAtMillis;
@@ -134,6 +146,13 @@ public final class ClientDamageFeedback {
             this.shieldDamage = shieldDamage;
             this.headshot = headshot;
             this.updatedAtMillis = updatedAtMillis;
+        }
+
+        private void accumulate(float healthDamage, float shieldDamage, boolean headshot, long now) {
+            this.healthDamage += healthDamage;
+            this.shieldDamage += shieldDamage;
+            this.headshot = headshot;
+            this.updatedAtMillis = now;
         }
 
         private void pushUp(long now) {

@@ -8,6 +8,7 @@ import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.saveddata.SavedData;
 
 import java.util.ArrayList;
@@ -91,11 +92,17 @@ public final class ArsenalSavedData extends SavedData {
         ListTag stages = new ListTag();
         for (ArsenalWeaponStage stage : set.stages()) {
             CompoundTag tag = new CompoundTag();
-            tag.putString("GunId", stage.gunId().toString()); tag.putString("FireMode", stage.fireMode().name());
-            tag.putInt("ReserveMagazines", stage.reserveMagazines());
-            CompoundTag attachments = new CompoundTag();
-            stage.attachments().forEach((type, id) -> attachments.putString(type.name(), id.toString()));
-            tag.put("Attachments", attachments); stages.add(tag);
+            tag.putString("Type", stage.type().name());
+            if (stage.type() == ArsenalWeaponStage.Type.ITEM) {
+                tag.put("ItemTemplate", stage.itemTemplate().save(new CompoundTag()));
+            } else {
+                tag.putString("GunId", stage.gunId().toString()); tag.putString("FireMode", stage.fireMode().name());
+                tag.putInt("ReserveMagazines", stage.reserveMagazines());
+                CompoundTag attachments = new CompoundTag();
+                stage.attachments().forEach((type, id) -> attachments.putString(type.name(), id.toString()));
+                tag.put("Attachments", attachments);
+            }
+            stages.add(tag);
         }
         root.put("Stages", stages); return root;
     }
@@ -104,6 +111,12 @@ public final class ArsenalSavedData extends SavedData {
         List<ArsenalWeaponStage> stages = new ArrayList<>();
         for (Tag raw : root.getList("Stages", Tag.TAG_COMPOUND)) {
             CompoundTag tag = (CompoundTag) raw;
+            if ("ITEM".equals(tag.getString("Type"))) {
+                ItemStack item = ItemStack.of(tag.getCompound("ItemTemplate"));
+                if (item.isEmpty()) return null;
+                stages.add(ArsenalWeaponStage.item(item));
+                continue;
+            }
             ResourceLocation gunId = ResourceLocation.tryParse(tag.getString("GunId"));
             FireMode fireMode;
             try { fireMode = FireMode.valueOf(tag.getString("FireMode")); } catch (IllegalArgumentException ex) { return null; }

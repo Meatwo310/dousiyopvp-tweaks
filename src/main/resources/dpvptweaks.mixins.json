@@ -5,6 +5,7 @@
   "refmap": "dpvptweaks.refmap.json",
   "compatibilityLevel": "JAVA_17",
   "mixins": [
+    "airstrike.AirdropCrateEntityMixin",
     "curios.CPacketToggleRenderMixin",
     "lightmanscurrency.CommandPlayerTradingMixin",
     "minecraft.DamageTypeMixin",

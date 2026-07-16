@@ -10,7 +10,7 @@ import net.minecraftforge.network.NetworkEvent;
 import java.util.function.Supplier;
 
 public record ArsenalAdminActionPacket(Action action, String weaponSet, int stage, int reserveMagazines) {
-    public enum Action { REGISTER, REGISTER_ALL, VALIDATE, START, STOP, RESET, RELOAD, REFRESH }
+    public enum Action { REGISTER, REGISTER_ALL, REGISTER_INVENTORY, VALIDATE, START, STOP, RESET, RELOAD, REFRESH }
 
     public static void encode(ArsenalAdminActionPacket packet, FriendlyByteBuf buffer) {
         buffer.writeEnum(packet.action); buffer.writeUtf(packet.weaponSet, 64);
@@ -33,12 +33,17 @@ public record ArsenalAdminActionPacket(Action action, String weaponSet, int stag
                     case REGISTER -> {
                         ArsenalWeaponSetManager.setHeldWeapon(packet.weaponSet, packet.stage,
                                 packet.reserveMagazines, sender.getMainHandItem());
-                        yield ArsenalMatchManager.ActionResult.ok("第" + packet.stage + "段階へ手持ち銃を登録しました");
+                        yield ArsenalMatchManager.ActionResult.ok("第" + packet.stage + "段階へ手持ちアイテムを登録しました");
                     }
                     case REGISTER_ALL -> {
                         ArsenalWeaponSetManager.setHeldWeaponAll(packet.weaponSet,
                                 packet.reserveMagazines, sender.getMainHandItem());
-                        yield ArsenalMatchManager.ActionResult.ok("手持ち銃を全30段階へ登録しました（デバッグ用）");
+                        yield ArsenalMatchManager.ActionResult.ok("手持ちアイテムを全30段階へ登録しました（デバッグ用）");
+                    }
+                    case REGISTER_INVENTORY -> {
+                        ArsenalWeaponSetManager.setInventoryWeapons(packet.weaponSet,
+                                packet.reserveMagazines, sender);
+                        yield ArsenalMatchManager.ActionResult.ok("持ち物の30スタックを左上から順に登録しました");
                     }
                     case VALIDATE -> {
                         String error = ArsenalWeaponSetManager.validate(packet.weaponSet);

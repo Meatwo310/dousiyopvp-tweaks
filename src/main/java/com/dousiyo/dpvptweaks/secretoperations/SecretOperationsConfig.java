@@ -14,6 +14,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Map;
 
 /** UTF-8, operator-editable map locations for SECRET OPERATIONS. */
 public final class SecretOperationsConfig {
@@ -59,6 +60,11 @@ public final class SecretOperationsConfig {
     }
 
     public static String error(MinecraftServer server) { return validate(server).error; }
+
+    public static SupplyDrop supplyDrop() {
+        Showdown showdown = current.secretShowdown;
+        return showdown == null || showdown.supplyDrop == null ? new SupplyDrop() : showdown.supplyDrop;
+    }
 
     public static ConvoyValidation validateConvoy(MinecraftServer server) {
         if (loadError != null) return new ConvoyValidation(null, null, loadError);
@@ -145,6 +151,28 @@ public final class SecretOperationsConfig {
                       "y": 250.0,
                       "yaw": 0.0,
                       "pitch": 0.0
+                    },
+                    "supplyDrop": {
+                      "enabled": true,
+                      "dimension": "minecraft:overworld",
+                      "minX": -500.0,
+                      "maxX": 500.0,
+                      "minZ": -500.0,
+                      "maxZ": 500.0,
+                      "dropHeight": 80,
+                      "intervalSeconds": 120,
+                      "openSeconds": 10,
+                      "teamPoints": 20,
+                      "personalPoints": 20,
+                      "weapons": [
+                        {
+                          "gunId": "tacz:glock_17",
+                          "weight": 1,
+                          "fireMode": "SEMI",
+                          "reserveMagazines": 3,
+                          "attachments": {}
+                        }
+                      ]
                     }
                   },
                   "secretConvoy": {
@@ -167,7 +195,38 @@ public final class SecretOperationsConfig {
         public Showdown secretShowdown;
         public Convoy secretConvoy;
     }
-    public static final class Showdown { public AirSpawn airSpawn; }
+    public static final class Showdown {
+        public AirSpawn airSpawn;
+        public SupplyDrop supplyDrop = new SupplyDrop();
+    }
+    public static final class SupplyDrop {
+        public boolean enabled = true;
+        /** Blank dimension and non-finite bounds inherit secretShowdown.airSpawn. */
+        public String dimension = "";
+        public double minX = Double.NaN;
+        public double maxX = Double.NaN;
+        public double minZ = Double.NaN;
+        public double maxZ = Double.NaN;
+        public int dropHeight = 80;
+        public int intervalSeconds = 120;
+        public int openSeconds = 10;
+        public int teamPoints = 20;
+        public int personalPoints = 20;
+        public List<SupplyWeapon> weapons = List.of(defaultSupplyWeapon());
+
+        private static SupplyWeapon defaultSupplyWeapon() {
+            SupplyWeapon weapon = new SupplyWeapon();
+            weapon.gunId = "tacz:glock_17";
+            return weapon;
+        }
+    }
+    public static final class SupplyWeapon {
+        public String gunId;
+        public int weight = 1;
+        public String fireMode = "SEMI";
+        public int reserveMagazines = 3;
+        public Map<String, String> attachments = Map.of();
+    }
     public static final class Convoy {
         public SpawnPoint escortSpawn;
         public SpawnPoint defenderSpawn;

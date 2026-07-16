@@ -2,6 +2,8 @@ package com.dousiyo.dpvptweaks.client.pvpstats.screen;
 
 import com.dousiyo.dpvptweaks.DpvpTweaks;
 import com.dousiyo.dpvptweaks.client.pvpstats.PvpStatsClient;
+import com.dousiyo.dpvptweaks.client.content.ContentClient;
+import com.dousiyo.dpvptweaks.client.secretoperations.ClientDamageFeedback;
 import com.dousiyo.dpvptweaks.config.ClientConfig;
 import com.dousiyo.dpvptweaks.pvpstats.model.AggregateStats;
 import com.dousiyo.dpvptweaks.pvpstats.model.MatchRecord;
@@ -60,6 +62,8 @@ public class PvpStatsScreen extends Screen {
     private static final Tex SCROLL_THUMB = tex("overlay/scroll_thumb", 4, 20);
     private static final Tex SORT_BUTTON_NORMAL = tex("overlay/sort_button_normal", 44, 14);
     private static final Tex SORT_BUTTON_SELECTED = tex("overlay/sort_button_selected", 44, 14);
+    private static final Tex CHOICE_ARROW_LEFT = tex("overlay/choice_arrow_left", 8, 8);
+    private static final Tex CHOICE_ARROW_RIGHT = tex("overlay/choice_arrow_right", 8, 8);
     private static final Tex TOGGLE_OFF = tex("overlay/toggle_off", 24, 12);
     private static final Tex TOGGLE_ON = tex("overlay/toggle_on", 24, 12);
     private static final Tex TOGGLE_HOVER = tex("overlay/toggle_hover", 24, 12);
@@ -101,6 +105,7 @@ public class PvpStatsScreen extends Screen {
     private static final Rect TAB_HISTORY = new Rect(138, 28, 54, 14);
     private static final Rect TAB_RANKING = new Rect(194, 28, 54, 14);
     private static final Rect TAB_SETTINGS = new Rect(250, 28, 54, 14);
+    private static final Rect CONTENT_RECT = new Rect(5, 26, 70, 18);
     private static final Rect OVERVIEW_ALL_MODE = new Rect(6, 62, 66, 14);
     private static final Rect OVERVIEW_MODE_TRACK = new Rect(70, 108, 4, 70);
     private static final Rect HISTORY_TRACK = new Rect(312, 78, 4, 84);
@@ -116,6 +121,7 @@ public class PvpStatsScreen extends Screen {
     private static final Rect SETTING_SHOW_MATCH_HISTORY = new Rect(92, 118, 210, 18);
     private static final Rect SETTING_JOIN_LEADERBOARDS = new Rect(92, 142, 210, 18);
     private static final Rect SETTING_LOADOUT_THEME = new Rect(92, 70, 210, 18);
+    private static final Rect SETTING_DAMAGE_FEEDBACK_MODE = new Rect(92, 94, 210, 18);
 
     private static final int MODE_ROW_Y = 108;
     private static final int MODE_ROW_HEIGHT = 14;
@@ -235,6 +241,23 @@ public class PvpStatsScreen extends Screen {
     }
 
     private void renderTabs(GuiGraphics gg, int mouseX, int mouseY) {
+        boolean contentHover = isHovering(CONTENT_RECT, mouseX, mouseY);
+        int x = this.leftPos + CONTENT_RECT.x;
+        int y = this.topPos + CONTENT_RECT.y;
+        int right = x + CONTENT_RECT.w;
+        int bottom = y + CONTENT_RECT.h;
+
+        // Opaque frame, inset face, top shine and bottom shadow make this read as a button.
+        gg.fill(x, y, right, bottom, contentHover ? 0xFFFFC247 : 0xFF8E7430);
+        gg.fill(x + 1, y + 1, right - 1, bottom - 1, 0xFF0A0E0E);
+        gg.fill(x + 2, y + 2, right - 2, bottom - 2, contentHover ? 0xFF3B331D : 0xFF24251B);
+        gg.fill(x + 2, y + 2, right - 2, y + 3, contentHover ? 0xFFFFD268 : 0xFFC6A344);
+        gg.fill(x + 2, bottom - 3, right - 2, bottom - 2, 0xFF090B09);
+        gg.fill(x + 2, y + 3, x + 4, bottom - 3, contentHover ? 0xFFFFC247 : 0xFFD5A92E);
+
+        String info = "お知らせ・ルール";
+        gg.drawString(font, info, x + (CONTENT_RECT.w - font.width(info)) / 2 + 1,
+                y + 5, contentHover ? 0xFFFFF1C4 : 0xFFE8D9A4, true);
         renderPageTab(gg, TAB_OVERVIEW, Page.OVERVIEW, mouseX, mouseY);
         renderPageTab(gg, TAB_HISTORY, Page.HISTORY, mouseX, mouseY);
         renderPageTab(gg, TAB_RANKING, Page.RANKING, mouseX, mouseY);
@@ -561,7 +584,8 @@ public class PvpStatsScreen extends Screen {
             drawTrimmed(gg, text("settings.display.title"), this.leftPos + 92, this.topPos + 54, 120, 0xF2FBFF);
             renderChoiceSettingRow(gg, SETTING_LOADOUT_THEME, key("setting.loadout_theme"),
                     loadoutThemeLabel(ClientConfig.LOADOUT_THEME_MODE.get()), mouseX, mouseY);
-            drawTrimmed(gg, text("settings.display.local_only"), this.leftPos + 100, this.topPos + 100, 194, 0x7898A4);
+            renderChoiceSettingRow(gg, SETTING_DAMAGE_FEEDBACK_MODE, key("setting.damage_feedback_mode"),
+                    damageFeedbackModeLabel(ClientConfig.DAMAGE_FEEDBACK_MODE.get()), mouseX, mouseY);
         } else {
             drawTrimmed(gg, text("settings.title"), this.leftPos + 92, this.topPos + 54, 120, 0xF2FBFF);
             PlayerPrivacySettings settings = this.payload.privacySettings();
@@ -593,11 +617,15 @@ public class PvpStatsScreen extends Screen {
     private void renderChoiceSettingRow(GuiGraphics gg, Rect rect, String labelKey, String value, int mouseX, int mouseY) {
         int x = this.leftPos + rect.x;
         int y = this.topPos + rect.y;
-        if (isHovering(rect, mouseX, mouseY)) {
-            gg.fill(x + 3, y + 2, x + rect.w - 3, y + rect.h - 2, 0x66304A55);
-        }
+        Rect control = choiceControl(rect);
+        boolean hovering = isHovering(control, mouseX, mouseY);
         drawTrimmed(gg, text(labelKey), x + 8, y + 5, 104, 0xD8E8ED);
-        drawCenteredTrimmed(gg, "< " + value + " >", x + 116, y + 5, rect.w - 124, 0xE9FDFF);
+        blitScaled(gg, hovering ? SORT_BUTTON_SELECTED : SORT_BUTTON_NORMAL,
+                this.leftPos + control.x, this.topPos + control.y, control.w, control.h);
+        blit(gg, CHOICE_ARROW_LEFT, this.leftPos + control.x + 3, this.topPos + control.y + 3);
+        blit(gg, CHOICE_ARROW_RIGHT, this.leftPos + control.x + control.w - 11, this.topPos + control.y + 3);
+        drawCenteredTrimmed(gg, value, this.leftPos + control.x + 14, this.topPos + control.y + 3,
+                control.w - 28, hovering ? 0xFFFFFF : 0xE9FDFF);
     }
 
     private void renderFooter(GuiGraphics gg) {
@@ -752,7 +780,10 @@ public class PvpStatsScreen extends Screen {
             return;
         }
         if (this.settingsCategory == SettingsCategory.DISPLAY) {
-            renderSettingTooltip(gg, SETTING_LOADOUT_THEME, "setting.loadout_theme", mouseX, mouseY);
+            if (renderSettingTooltip(gg, SETTING_LOADOUT_THEME, "setting.loadout_theme", mouseX, mouseY)) {
+                return;
+            }
+            renderSettingTooltip(gg, SETTING_DAMAGE_FEEDBACK_MODE, "setting.damage_feedback_mode", mouseX, mouseY);
             return;
         }
         if (renderSettingTooltip(gg, SETTING_SHOW_RANK, "setting.show_rank", mouseX, mouseY)
@@ -790,6 +821,11 @@ public class PvpStatsScreen extends Screen {
 
         if (isHovering(CLOSE_RECT, mouseX, mouseY)) {
             this.onClose();
+            return true;
+        }
+
+        if (isHovering(CONTENT_RECT, mouseX, mouseY)) {
+            ContentClient.open(this);
             return true;
         }
 
@@ -900,8 +936,14 @@ public class PvpStatsScreen extends Screen {
         }
 
         if (this.settingsCategory == SettingsCategory.DISPLAY) {
-            if (isHovering(SETTING_LOADOUT_THEME, mouseX, mouseY)) {
-                cycleLoadoutTheme();
+            Rect loadoutControl = choiceControl(SETTING_LOADOUT_THEME);
+            if (isHovering(loadoutControl, mouseX, mouseY)) {
+                cycleLoadoutTheme(isHovering(choiceLeft(loadoutControl), mouseX, mouseY) ? -1 : 1);
+                return true;
+            }
+            Rect damageControl = choiceControl(SETTING_DAMAGE_FEEDBACK_MODE);
+            if (isHovering(damageControl, mouseX, mouseY)) {
+                cycleDamageFeedbackMode(isHovering(choiceLeft(damageControl), mouseX, mouseY) ? -1 : 1);
                 return true;
             }
             return false;
@@ -969,14 +1011,33 @@ public class PvpStatsScreen extends Screen {
         PvpStatsClient.updatePrivacySettings(settings);
     }
 
-    private void cycleLoadoutTheme() {
+    private void cycleLoadoutTheme(int direction) {
         ClientConfig.LoadoutThemeMode[] modes = ClientConfig.LoadoutThemeMode.values();
         ClientConfig.LoadoutThemeMode current = ClientConfig.LOADOUT_THEME_MODE.get();
-        ClientConfig.LOADOUT_THEME_MODE.set(modes[(current.ordinal() + 1) % modes.length]);
+        ClientConfig.LOADOUT_THEME_MODE.set(modes[Math.floorMod(current.ordinal() + direction, modes.length)]);
     }
 
     private static String loadoutThemeLabel(ClientConfig.LoadoutThemeMode mode) {
         return text("setting.loadout_theme.value." + mode.name().toLowerCase(Locale.ROOT));
+    }
+
+    private void cycleDamageFeedbackMode(int direction) {
+        ClientConfig.DamageFeedbackMode[] modes = ClientConfig.DamageFeedbackMode.values();
+        ClientConfig.DamageFeedbackMode current = ClientConfig.DAMAGE_FEEDBACK_MODE.get();
+        ClientConfig.DAMAGE_FEEDBACK_MODE.set(modes[Math.floorMod(current.ordinal() + direction, modes.length)]);
+        ClientDamageFeedback.clear();
+    }
+
+    private static String damageFeedbackModeLabel(ClientConfig.DamageFeedbackMode mode) {
+        return text("setting.damage_feedback_mode.value." + mode.name().toLowerCase(Locale.ROOT));
+    }
+
+    private static Rect choiceControl(Rect row) {
+        return new Rect(row.x + 116, row.y + 2, row.w - 124, 14);
+    }
+
+    private static Rect choiceLeft(Rect control) {
+        return new Rect(control.x, control.y, 14, control.h);
     }
 
     private void onSearchChanged(String value) {

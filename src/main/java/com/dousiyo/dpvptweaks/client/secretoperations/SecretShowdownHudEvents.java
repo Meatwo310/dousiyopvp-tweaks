@@ -21,6 +21,10 @@ public final class SecretShowdownHudEvents {
         boolean teamKillMatch = phase == SecretShowdownPhase.ACTIVE || phase == SecretShowdownPhase.OVERTIME;
         int cx = width / 2;
         if (teamKillMatch) renderTeamKillScore(gg, mc, cx);
+        if (teamKillMatch)
+            gg.drawCenteredString(mc.font, "PTS: " + ClientShowdownState.personalPoints(), cx, 60, 0xFFFFD66B);
+
+        ClientSupplyCrateState.render(gg, width, height);
 
         if (ClientShowdownState.pendingDrafts() > 0)
             gg.drawString(mc.font, "SECRET TECH DRAFT x" + ClientShowdownState.pendingDrafts() + " [I]", 8, height - 28, 0xFF66FFFF);

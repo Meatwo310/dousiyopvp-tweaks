@@ -29,8 +29,6 @@ public class DpvpTweaksConfigCommand {
                         .then(configStringList("spectatorTeams", ServerConfig.SET_SPECTATOR_ON_DEATH_TEAMS))
                         .then(configStringList("loadoutTeams", ServerConfig.OPEN_LOADOUT_ON_RESPAWN_TEAMS))
                         .then(configStringList("miniLoadoutTeams", ServerConfig.OPEN_MINI_LOADOUT_ON_RESPAWN_TEAMS)))
-                .then(Commands.literal("capture")
-                        .then(config("enabled", ServerConfig.CAPTURE_ENABLED)))
                 .executes(ctx -> {
                     String message = """
                             Current config:
@@ -43,8 +41,7 @@ public class DpvpTweaksConfigCommand {
                             death clear inventory teams: %s
                             death spectator teams: %s
                             death loadout teams: %s
-                            death mini loadout teams: %s
-                            capture enabled: %s""".formatted(
+                            death mini loadout teams: %s""".formatted(
                             ServerConfig.VALINE1G_DAMAGE.get(),
                             ServerConfig.VALINE1G_COOLDOWN.get(),
                             ServerConfig.VALINE2G_DAMAGE.get(),
@@ -54,8 +51,7 @@ public class DpvpTweaksConfigCommand {
                             listToText(ServerConfig.CLEAR_INVENTORY_ON_DEATH_TEAMS.get()),
                             listToText(ServerConfig.SET_SPECTATOR_ON_DEATH_TEAMS.get()),
                             listToText(ServerConfig.OPEN_LOADOUT_ON_RESPAWN_TEAMS.get()),
-                            listToText(ServerConfig.OPEN_MINI_LOADOUT_ON_RESPAWN_TEAMS.get()),
-                            ServerConfig.CAPTURE_ENABLED.get()
+                            listToText(ServerConfig.OPEN_MINI_LOADOUT_ON_RESPAWN_TEAMS.get())
                     );
                     ctx.getSource().sendSuccess(() -> Component.literal(message), false);
                     return Command.SINGLE_SUCCESS;

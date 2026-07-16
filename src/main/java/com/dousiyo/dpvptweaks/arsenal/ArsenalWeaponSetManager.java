@@ -8,8 +8,14 @@ import com.tacz.guns.api.item.IGun;
 import com.tacz.guns.api.item.attachment.AttachmentType;
 import com.tacz.guns.api.item.gun.FireMode;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.TagParser;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.Items;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraftforge.fml.loading.FMLPaths;
+import net.minecraftforge.registries.ForgeRegistries;
 
 import java.io.Reader;
 import java.io.Writer;
@@ -106,13 +112,50 @@ public final class ArsenalWeaponSetManager {
         reload();
     }
 
+    public static synchronized void setInventoryWeapons(String requestedId, int reserveMagazines,
+                                                        ServerPlayer player) throws Exception {
+        String id = normalizeId(requestedId);
+        if (!SAFE_ID.matcher(id).matches()) throw new IllegalArgumentException("weapon_set IDが不正です");
+        List<ItemStack> weapons = new ArrayList<>(ArsenalWeaponSet.STAGE_COUNT);
+        // Inventory GUI order: main inventory top-left to bottom-right, then hotbar left to right.
+        for (int slot = 9; slot <= 35; slot++) addItemIfPresent(weapons, player.getInventory().getItem(slot));
+        for (int slot = 0; slot <= 8; slot++) addItemIfPresent(weapons, player.getInventory().getItem(slot));
+        if (weapons.size() != ArsenalWeaponSet.STAGE_COUNT)
+            throw new IllegalArgumentException("空でないアイテムスタックが30個必要です（検出: " + weapons.size() + "個）");
+
+        RawSet raw = readOrEmpty(id);
+        ensureThirtySlots(raw);
+        for (int i = 0; i < ArsenalWeaponSet.STAGE_COUNT; i++)
+            raw.stages.set(i, rawStage(weapons.get(i), reserveMagazines));
+        writeAtomic(id, raw);
+        reload();
+    }
+
+    private static void addItemIfPresent(List<ItemStack> weapons, ItemStack stack) {
+        if (!stack.isEmpty()) weapons.add(stack.copy());
+    }
+
     private static RawStage rawStage(ItemStack held, int reserveMagazines) {
         if (reserveMagazines < 0 || reserveMagazines > 256) throw new IllegalArgumentException("予備マガジン数は0～256です");
+        if (held == null || held.isEmpty()) throw new IllegalArgumentException("登録するアイテムが空です");
         IGun gun = IGun.getIGunOrNull(held);
         ResourceLocation gunId = gun == null ? null : gun.getGunId(held);
-        if (gunId == null || TimelessAPI.getCommonGunIndex(gunId).isEmpty())
-            throw new IllegalArgumentException("メインハンドが登録済みTaCZ銃ではありません");
         RawStage stage = new RawStage();
+        if (gunId == null) {
+            ResourceLocation itemId = ForgeRegistries.ITEMS.getKey(held.getItem());
+            if (itemId == null || held.getItem() == Items.AIR) throw new IllegalArgumentException("アイテムIDを取得できません");
+            stage.type = "item";
+            stage.item_id = itemId.toString();
+            stage.count = held.getCount();
+            if (held.hasTag()) {
+                CompoundTag tag = held.getTag().copy();
+                tag.remove("dpvptweaksArsenal");
+                if (!tag.isEmpty()) stage.tag_snbt = tag.toString();
+            }
+            return stage;
+        }
+        if (TimelessAPI.getCommonGunIndex(gunId).isEmpty())
+            throw new IllegalArgumentException("TaCZ銃IDが登録されていません: " + gunId);
         stage.type = "tacz_gun";
         stage.gun_id = gunId.toString();
         stage.loaded_ammo = "full";
@@ -176,6 +219,25 @@ public final class ArsenalWeaponSetManager {
         for (int i = 0; i < raw.stages.size(); i++) {
             RawStage entry = raw.stages.get(i);
             if (entry == null) return ParseResult.error("第" + (i + 1) + "段階が未設定です");
+            if ("item".equals(entry.type)) {
+                ResourceLocation itemId = ResourceLocation.tryParse(entry.item_id == null ? "" : entry.item_id);
+                if (itemId == null || !ForgeRegistries.ITEMS.containsKey(itemId))
+                    return ParseResult.error("第" + (i + 1) + "段階のitem_idが不正です");
+                Item item = ForgeRegistries.ITEMS.getValue(itemId);
+                if (item == null || item == Items.AIR) return ParseResult.error("第" + (i + 1) + "段階のアイテムが存在しません");
+                if (entry.count < 1 || entry.count > item.getMaxStackSize())
+                    return ParseResult.error("第" + (i + 1) + "段階のcountが不正です");
+                ItemStack itemStack = new ItemStack(item, entry.count);
+                if (entry.tag_snbt != null && !entry.tag_snbt.isBlank()) {
+                    try { itemStack.setTag(TagParser.parseTag(entry.tag_snbt)); }
+                    catch (Exception exception) { return ParseResult.error("第" + (i + 1) + "段階のtag_snbtが不正です"); }
+                }
+                ArsenalWeaponStage stage = ArsenalWeaponStage.item(itemStack);
+                ArsenalWeaponFactory.Result generated = ArsenalWeaponFactory.create(stage);
+                if (!generated.valid()) return ParseResult.error("第" + (i + 1) + "段階: " + generated.error());
+                stages.add(stage);
+                continue;
+            }
             if (!"tacz_gun".equals(entry.type)) return ParseResult.error("第" + (i + 1) + "段階のtypeが不正です");
             if (!"full".equals(entry.loaded_ammo)) return ParseResult.error("第" + (i + 1) + "段階のloaded_ammoはfullのみです");
             ResourceLocation gunId = ResourceLocation.tryParse(entry.gun_id == null ? "" : entry.gun_id);
@@ -217,6 +279,7 @@ public final class ArsenalWeaponSetManager {
     }
     private static final class RawStage {
         String type; String gun_id; String loaded_ammo; int reserve_magazines = 4; String fire_mode;
+        String item_id; int count = 1; String tag_snbt;
         Map<String, String> attachments;
     }
 }

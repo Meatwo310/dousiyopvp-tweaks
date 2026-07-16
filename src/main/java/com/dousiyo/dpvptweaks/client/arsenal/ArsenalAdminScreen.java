@@ -42,15 +42,18 @@ public final class ArsenalAdminScreen extends Screen {
         reserveMagazines.setValue("4"); reserveMagazines.setFilter(value -> value.matches("\\d{0,3}"));
         addRenderableWidget(reserveMagazines);
 
-        addRenderableWidget(Button.builder(Component.literal("この段階へ登録"), button -> send(ArsenalAdminActionPacket.Action.REGISTER))
-                .tooltip(Tooltip.create(Component.literal("メインハンドのTaCZ銃を、入力した段階へ登録します。射撃モードとアタッチメントも保存します。")))
-                .bounds(cx - 155, 84, 115, 20).build());
-        addRenderableWidget(Button.builder(Component.literal("全30段階へ登録"), button -> send(ArsenalAdminActionPacket.Action.REGISTER_ALL))
-                .tooltip(Tooltip.create(Component.literal("デバッグ用：メインハンドの同じTaCZ銃を全30段階へ一括登録します。")))
-                .bounds(cx - 35, 84, 115, 20).build());
+        addRenderableWidget(Button.builder(Component.literal("段階登録"), button -> send(ArsenalAdminActionPacket.Action.REGISTER))
+                .tooltip(Tooltip.create(Component.literal("メインハンドのアイテムを入力した段階へ登録します。TaCZ銃は構成を正規化し、その他は個数とNBTを保存します。")))
+                .bounds(cx - 155, 84, 72, 20).build());
+        addRenderableWidget(Button.builder(Component.literal("同じ銃×30"), button -> send(ArsenalAdminActionPacket.Action.REGISTER_ALL))
+                .tooltip(Tooltip.create(Component.literal("デバッグ用：メインハンドの同じアイテムを全30段階へ一括登録します。")))
+                .bounds(cx - 78, 84, 78, 20).build());
+        addRenderableWidget(Button.builder(Component.literal("持ち物30丁"), button -> send(ArsenalAdminActionPacket.Action.REGISTER_INVENTORY))
+                .tooltip(Tooltip.create(Component.literal("空でない30スタックを、メイン欄の左上→右下、続いてホットバー左→右の順で登録します。空き枠だけを飛ばします。")))
+                .bounds(cx + 5, 84, 85, 20).build());
         addRenderableWidget(Button.builder(Component.literal("検証"), button -> send(ArsenalAdminActionPacket.Action.VALIDATE))
                 .tooltip(Tooltip.create(Component.literal("30段階、銃ID、アタッチメント、射撃モード、予備弾設定を検証します。")))
-                .bounds(cx + 85, 84, 70, 20).build());
+                .bounds(cx + 95, 84, 60, 20).build());
 
         addRenderableWidget(Button.builder(Component.literal("開始"), button -> send(ArsenalAdminActionPacket.Action.START))
                 .tooltip(Tooltip.create(Component.literal("非adminのオンラインプレイヤー全員で試合を開始します。2人以上と有効な武器セットが必要です。")))

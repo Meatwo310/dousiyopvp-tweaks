@@ -7,7 +7,7 @@ import net.minecraftforge.network.NetworkRegistry;
 import net.minecraftforge.network.simple.SimpleChannel;
 
 public final class SecretOperationsNetwork {
-    private static final String PROTOCOL_VERSION = "4";
+    private static final String PROTOCOL_VERSION = "5";
     private static boolean registered;
     private static int packetId;
 
@@ -57,6 +57,12 @@ public final class SecretOperationsNetwork {
         CHANNEL.messageBuilder(OpenPendingSecretDraftPacket.class, packetId++, NetworkDirection.PLAY_TO_SERVER)
                 .encoder(OpenPendingSecretDraftPacket::encode).decoder(OpenPendingSecretDraftPacket::decode)
                 .consumerMainThread(OpenPendingSecretDraftPacket::handle).add();
+        CHANNEL.messageBuilder(SupplyCrateHoldPacket.class, packetId++, NetworkDirection.PLAY_TO_SERVER)
+                .encoder(SupplyCrateHoldPacket::encode).decoder(SupplyCrateHoldPacket::decode)
+                .consumerMainThread(SupplyCrateHoldPacket::handle).add();
+        CHANNEL.messageBuilder(SupplyCrateProgressPacket.class, packetId++, NetworkDirection.PLAY_TO_CLIENT)
+                .encoder(SupplyCrateProgressPacket::encode).decoder(SupplyCrateProgressPacket::decode)
+                .consumerMainThread(SupplyCrateProgressPacket::handle).add();
 
         DpvpTweaks.LOGGER.info("[{}] SECRET OPERATIONS network packets registered", DpvpTweaks.MOD_NAME);
     }

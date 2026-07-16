@@ -3,6 +3,9 @@ package com.dousiyo.dpvptweaks.pvpstats.network;
 import com.dousiyo.dpvptweaks.DpvpTweaks;
 import com.dousiyo.dpvptweaks.pvpstats.network.c2s.RequestOwnStatsPacket;
 import com.dousiyo.dpvptweaks.pvpstats.network.c2s.UpdatePrivacySettingsPacket;
+import com.dousiyo.dpvptweaks.pvpstats.network.c2s.RequestContentPacket;
+import com.dousiyo.dpvptweaks.pvpstats.network.s2c.ContentDetailPacket;
+import com.dousiyo.dpvptweaks.pvpstats.network.s2c.ContentListPacket;
 import com.dousiyo.dpvptweaks.pvpstats.network.s2c.OpenStatsGuiPacket;
 import com.dousiyo.dpvptweaks.pvpstats.network.s2c.StatsErrorPacket;
 import net.minecraft.resources.ResourceLocation;
@@ -11,7 +14,7 @@ import net.minecraftforge.network.NetworkRegistry;
 import net.minecraftforge.network.simple.SimpleChannel;
 
 public final class PvpStatsNetwork {
-    private static final String PROTOCOL_VERSION = "5";
+    private static final String PROTOCOL_VERSION = "6";
     private static boolean registered;
     private static int packetId;
 
@@ -54,6 +57,18 @@ public final class PvpStatsNetwork {
                 .decoder(StatsErrorPacket::decode)
                 .consumerMainThread(StatsErrorPacket::handle)
                 .add();
+
+        CHANNEL.messageBuilder(RequestContentPacket.class, packetId++, NetworkDirection.PLAY_TO_SERVER)
+                .encoder(RequestContentPacket::encode).decoder(RequestContentPacket::decode)
+                .consumerMainThread(RequestContentPacket::handle).add();
+
+        CHANNEL.messageBuilder(ContentListPacket.class, packetId++, NetworkDirection.PLAY_TO_CLIENT)
+                .encoder(ContentListPacket::encode).decoder(ContentListPacket::decode)
+                .consumerMainThread(ContentListPacket::handle).add();
+
+        CHANNEL.messageBuilder(ContentDetailPacket.class, packetId++, NetworkDirection.PLAY_TO_CLIENT)
+                .encoder(ContentDetailPacket::encode).decoder(ContentDetailPacket::decode)
+                .consumerMainThread(ContentDetailPacket::handle).add();
 
         DpvpTweaks.LOGGER.info("[{}] PvP stats network packets registered", DpvpTweaks.MOD_NAME);
     }

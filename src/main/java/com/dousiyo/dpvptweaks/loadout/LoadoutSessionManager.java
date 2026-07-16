@@ -5,6 +5,7 @@ import com.dousiyo.dpvptweaks.network.LoadoutGuiNetwork;
 import com.dousiyo.dpvptweaks.network.OpenLoadoutGuiPacket;
 import com.dousiyo.dpvptweaks.network.OpenMiniLoadoutGuiPacket;
 import net.minecraft.commands.CommandFunction;
+import net.minecraft.commands.CommandSource;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -78,9 +79,7 @@ public final class LoadoutSessionManager {
 
     private static void apply(ServerPlayer player, LoadoutDefinition loadout) {
         try {
-            CommandSourceStack source = player.createCommandSourceStack()
-                    .withPermission(2)
-                    .withSuppressedOutput();
+            CommandSourceStack source = silentCommandSource(player);
             int applied = player.server.getCommands().performPrefixedCommand(source, "loadout apply " + loadout.id() + " @s");
             if (applied <= 0) {
                 player.displayClientMessage(Component.literal("Failed to apply saved loadout: " + loadout.id()), false);
@@ -120,7 +119,7 @@ public final class LoadoutSessionManager {
         }
 
         try {
-            CommandSourceStack source = player.createCommandSourceStack().withPermission(2).withSuppressedOutput();
+            CommandSourceStack source = silentCommandSource(player);
             int applied = player.server.getCommands().performPrefixedCommand(source,
                     "loadout apply " + entry.random().template() + " @s");
             if (applied <= 0) {
@@ -148,6 +147,13 @@ public final class LoadoutSessionManager {
         Optional<CommandFunction> function = player.server.getFunctions().get(functionId);
         if (function.isEmpty()) throw new IllegalStateException("After-apply function not found: " + functionId);
         player.server.getFunctions().execute(function.get(), source);
+    }
+
+    private static CommandSourceStack silentCommandSource(ServerPlayer player) {
+        return player.createCommandSourceStack()
+                .withSource(CommandSource.NULL)
+                .withPermission(2)
+                .withSuppressedOutput();
     }
 
     private static Map<String, LoadoutDataManager.AvailableLoadout> byId(List<LoadoutDataManager.AvailableLoadout> loadouts) {

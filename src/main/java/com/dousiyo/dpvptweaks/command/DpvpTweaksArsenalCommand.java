@@ -68,6 +68,11 @@ public final class DpvpTweaksArsenalCommand {
                         .executes(context -> setHeldAll(context, 4))
                         .then(Commands.argument("reserve_magazines", IntegerArgumentType.integer(0, 256))
                                 .executes(context -> setHeldAll(context,
+                                        IntegerArgumentType.getInteger(context, "reserve_magazines")))))
+                .then(Commands.literal("setinventory")
+                        .executes(context -> setInventory(context, 4))
+                        .then(Commands.argument("reserve_magazines", IntegerArgumentType.integer(0, 256))
+                                .executes(context -> setInventory(context,
                                         IntegerArgumentType.getInteger(context, "reserve_magazines"))))));
         command.then(weapons);
         return command;
@@ -93,10 +98,24 @@ public final class DpvpTweaksArsenalCommand {
             String id = StringArgumentType.getString(context, "weapon_set");
             ArsenalWeaponSetManager.setHeldWeaponAll(id, reserveMagazines, player.getMainHandItem());
             context.getSource().sendSuccess(() -> Component.literal(
-                    "手持ち銃を武器セット" + id + "の全30段階へ登録しました（デバッグ用）"), true);
+                    "手持ちアイテムを武器セット" + id + "の全30段階へ登録しました（デバッグ用）"), true);
             return 1;
         } catch (Exception exception) {
             context.getSource().sendFailure(Component.literal("一括登録失敗: " + exception.getMessage()));
+            return 0;
+        }
+    }
+
+    private static int setInventory(CommandContext<CommandSourceStack> context, int reserveMagazines) {
+        try {
+            ServerPlayer player = context.getSource().getPlayerOrException();
+            String id = StringArgumentType.getString(context, "weapon_set");
+            ArsenalWeaponSetManager.setInventoryWeapons(id, reserveMagazines, player);
+            context.getSource().sendSuccess(() -> Component.literal(
+                    "持ち物の30スタックを左上から武器セット" + id + "へ登録しました"), true);
+            return 1;
+        } catch (Exception exception) {
+            context.getSource().sendFailure(Component.literal("持ち物一括登録失敗: " + exception.getMessage()));
             return 0;
         }
     }

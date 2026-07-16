@@ -16,7 +16,12 @@ public final class ArsenalWeaponFactory {
     private ArsenalWeaponFactory() {}
 
     public static Result create(ArsenalWeaponStage stage) {
-        if (stage == null || stage.gunId() == null || stage.fireMode() == null) return Result.error("段階定義が空です");
+        if (stage == null) return Result.error("段階定義が空です");
+        if (stage.type() == ArsenalWeaponStage.Type.ITEM) {
+            ItemStack item = stage.itemTemplate();
+            return item.isEmpty() ? Result.error("汎用アイテムが空です") : Result.ok(item, List.of(), 0);
+        }
+        if (stage.gunId() == null || stage.fireMode() == null) return Result.error("TaCZ銃定義が空です");
         var index = TimelessAPI.getCommonGunIndex(stage.gunId());
         if (index.isEmpty()) return Result.error("銃IDが存在しません: " + stage.gunId());
         var gunData = index.get().getGunData();

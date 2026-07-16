@@ -7,6 +7,11 @@ import java.util.concurrent.ThreadLocalRandom;
 public class ClientConfig {
     private static final ForgeConfigSpec.Builder BUILDER = new ForgeConfigSpec.Builder();
 
+    public enum DamageFeedbackMode {
+        INDIVIDUAL,
+        CUMULATIVE
+    }
+
     public enum LoadoutThemeMode {
         RANDOM(""),
         DEFAULT("default"),
@@ -39,18 +44,9 @@ public class ClientConfig {
                     RANDOM: choose one of the 6 themes each time the GUI opens.
                     Others: fix to that theme color set.""")
             .defineEnum("loadoutThemeMode", LoadoutThemeMode.RANDOM);
-    public static final ForgeConfigSpec.BooleanValue CAPTURE_SHOW_OVERVIEW_HUD = BUILDER
-            .comment("Show capture points overview HUD")
-            .define("captureShowOverviewHud", true);
-
-    public static final ForgeConfigSpec.BooleanValue CAPTURE_SHOW_FOCUS_HUD = BUILDER
-            .comment("Show capture point focus HUD while standing in a point")
-            .define("captureShowFocusHud", true);
-
-    public static final ForgeConfigSpec.IntValue CAPTURE_OVERVIEW_Y_OFFSET = BUILDER
-            .comment("Vertical offset for capture overview HUD")
-            .defineInRange("captureOverviewYOffset", 24, -120, 200);
-
+    public static final ForgeConfigSpec.EnumValue<DamageFeedbackMode> DAMAGE_FEEDBACK_MODE = BUILDER
+            .comment("Damage number display mode. INDIVIDUAL lists each hit; CUMULATIVE adds consecutive hits on the same target.")
+            .defineEnum("damageFeedbackMode", DamageFeedbackMode.INDIVIDUAL);
     public static final ForgeConfigSpec.BooleanValue FUNCTION_PALETTE_CLOSE_AFTER_RUN;
 
     static {

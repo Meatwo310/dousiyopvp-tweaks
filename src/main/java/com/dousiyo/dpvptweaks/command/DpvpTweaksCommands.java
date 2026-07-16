@@ -22,6 +22,7 @@ public class DpvpTweaksCommands {
         DpvpTweaksSecretOperationsCommand.register(builder, event);
         DpvpTweaksDamageFeedbackCommand.register(builder, event);
         DpvpTweaksArsenalCommand.register(builder, event);
+        DpvpTweaksContentCommand.register(builder, event);
 
         event.getDispatcher().register(builder);
         event.getDispatcher().register(DpvpTweaksLoadoutCommand.buildDirectCommand());
