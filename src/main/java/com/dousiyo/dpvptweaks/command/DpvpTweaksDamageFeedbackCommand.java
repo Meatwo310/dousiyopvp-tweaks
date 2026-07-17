@@ -39,7 +39,7 @@ public final class DpvpTweaksDamageFeedbackCommand {
 
     private static int setEnabled(CommandSourceStack source, boolean enabled) {
         DamageFeedbackManager.setEnabled(source.getServer(), enabled);
-        sendStatus(source, enabled, true);
+        sendStatus(source, DamageFeedbackManager.isEnabled(), true);
         return Command.SINGLE_SUCCESS;
     }
 

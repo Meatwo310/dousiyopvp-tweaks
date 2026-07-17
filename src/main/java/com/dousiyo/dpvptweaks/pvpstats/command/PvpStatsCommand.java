@@ -82,10 +82,45 @@ public final class PvpStatsCommand {
                                 .then(Commands.argument("mode_id", StringArgumentType.word())
                                         .then(Commands.argument("stat_key", StringArgumentType.word())
                                                 .executes(PvpStatsCommand::importObjective)))))
+                .then(Commands.literal("achievement")
+                        .requires(source -> source.hasPermission(2))
+                        .then(Commands.literal("grant")
+                                .then(Commands.argument("player", EntityArgument.player())
+                                        .then(Commands.literal("debugger")
+                                                .executes(ctx -> updateAchievement(ctx, "debugger", "デバッカー", true)))
+                                        .then(Commands.literal("supporter")
+                                                .executes(ctx -> updateAchievement(ctx, "supporter", "サポーター", true)))))
+                        .then(Commands.literal("revoke")
+                                .then(Commands.argument("player", EntityArgument.player())
+                                        .then(Commands.literal("debugger")
+                                                .executes(ctx -> updateAchievement(ctx, "debugger", "デバッカー", false)))
+                                        .then(Commands.literal("supporter")
+                                                .executes(ctx -> updateAchievement(ctx, "supporter", "サポーター", false))))))
                 .then(Commands.literal("reset")
                         .requires(source -> source.hasPermission(2))
                         .then(Commands.argument("player", EntityArgument.player())
                                 .executes(PvpStatsCommand::resetPlayer)));
+    }
+
+    private static int updateAchievement(CommandContext<CommandSourceStack> ctx, String achievementId,
+                                         String achievementName, boolean grant)
+            throws com.mojang.brigadier.exceptions.CommandSyntaxException {
+        ServerPlayer target = EntityArgument.getPlayer(ctx, "player");
+        var savedData = SavedDataAccessor.get(ctx.getSource().getLevel());
+        boolean changed = grant
+                ? savedData.awardBadge(target.getUUID(), achievementId)
+                : savedData.revokeBadge(target.getUUID(), achievementId);
+        String action = grant ? "付与" : "取り消し";
+        if (!changed) {
+            ctx.getSource().sendFailure(Component.literal(
+                    "実績「" + achievementName + "」は既に" + (grant ? "付与済み" : "未付与") + "です: "
+                            + target.getGameProfile().getName()));
+            return 0;
+        }
+        ctx.getSource().sendSuccess(() -> Component.literal(
+                "実績「" + achievementName + "」を" + action + "しました: "
+                        + target.getGameProfile().getName()), true);
+        return Command.SINGLE_SUCCESS;
     }
 
     private static int openOwn(CommandContext<CommandSourceStack> ctx) throws com.mojang.brigadier.exceptions.CommandSyntaxException {

@@ -162,6 +162,7 @@ public final class SecretOperationsConfig {
                       "dropHeight": 80,
                       "intervalSeconds": 120,
                       "openSeconds": 10,
+                      "waitForClaimBeforeNextDrop": true,
                       "teamPoints": 20,
                       "personalPoints": 20,
                       "weapons": [
@@ -210,6 +211,7 @@ public final class SecretOperationsConfig {
         public int dropHeight = 80;
         public int intervalSeconds = 120;
         public int openSeconds = 10;
+        public boolean waitForClaimBeforeNextDrop = true;
         public int teamPoints = 20;
         public int personalPoints = 20;
         public List<SupplyWeapon> weapons = List.of(defaultSupplyWeapon());

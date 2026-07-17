@@ -16,7 +16,7 @@
     {"id":"dpvptweaks:tracer_rounds","name":"追跡弾","description":"攻撃した敵を5秒間発光させる","iconItem":"minecraft:spectral_arrow","effect":{"type":"tracer_rounds","values":{"durationTicks":100}}},
     {"id":"dpvptweaks:informant","name":"情報解析","description":"撃破した敵の周囲にいる敵を表示","iconItem":"minecraft:compass","effect":{"type":"informant","values":{"radius":20,"durationTicks":100}}},
     {"id":"dpvptweaks:weakness_analysis","name":"弱点解析","description":"同じ敵への3発目のダメージが15%上昇","iconItem":"minecraft:spyglass","effect":{"type":"weakness_analysis","values":{"hits":3,"bonus":0.15}}},
-    {"id":"dpvptweaks:field_medic","name":"救急処置","description":"食料による回復後に体力を追加回復","iconItem":"minecraft:glistering_melon_slice","effect":{"type":"field_medic","values":{"heal":2,"cooldownTicks":160}}},
+    {"id":"dpvptweaks:field_medic","name":"救急処置","description":"選択時に絆創膏を1個獲得","iconItem":"roughtweaks:bandage","effect":{"type":"field_medic","values":{"count":1}}},
     {"id":"dpvptweaks:hasty_harvest","name":"採掘加速","description":"採掘道具を持っている間、採掘速度が上昇","iconItem":"minecraft:iron_pickaxe","effect":{"type":"hasty_harvest","values":{}}},
     {"id":"dpvptweaks:overprepared","name":"追加準備","description":"選択時とリスポーン時の弾薬を50%増加","iconItem":"minecraft:chest","effect":{"type":"overprepared","values":{"multiplier":1.5}}},
     {"id":"dpvptweaks:resupply","name":"戦場補給","description":"敵プレイヤー撃破時に全種類の弾薬を補給","iconItem":"minecraft:barrel","effect":{"type":"resupply","values":{}}},

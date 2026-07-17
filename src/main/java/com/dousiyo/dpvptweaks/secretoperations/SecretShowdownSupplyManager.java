@@ -4,8 +4,8 @@ import com.dousiyo.airstrike.entity.AirdropCrateEntity;
 import com.dousiyo.dpvptweaks.DpvpTweaks;
 import com.dousiyo.dpvptweaks.arsenal.ArsenalWeaponFactory;
 import com.dousiyo.dpvptweaks.arsenal.ArsenalWeaponStage;
-import com.dousiyo.dpvptweaks.network.SecretOperationsNetwork;
-import com.dousiyo.dpvptweaks.network.SupplyCrateProgressPacket;
+import com.dousiyo.dpvptweaks.network.secretoperations.SecretOperationsNetwork;
+import com.dousiyo.dpvptweaks.network.secretoperations.SupplyCrateProgressPacket;
 import com.tacz.guns.api.item.attachment.AttachmentType;
 import com.tacz.guns.api.item.gun.FireMode;
 import net.minecraft.core.BlockPos;
@@ -76,6 +76,7 @@ public final class SecretShowdownSupplyManager {
         tickForcedChunks(server, now);
         if (config == null || !config.enabled || SecretShowdownManager.phase() != SecretShowdownPhase.ACTIVE) return;
         if (now < nextDropTick) return;
+        if (config.waitForClaimBeforeNextDrop && hasUnclaimedDrop()) return;
         nextDropTick = now + config.intervalTicks;
         spawnDrop(server, now);
     }
@@ -167,6 +168,10 @@ public final class SecretShowdownSupplyManager {
             return;
         }
         markUnlocked(crate);
+        ActiveDrop drop = ACTIVE_DROPS.get(crate.getUUID());
+        if (drop != null) drop.claimed = true;
+        if (config != null && config.waitForClaimBeforeNextDrop)
+            nextDropTick = player.server.overworld().getGameTime() + config.intervalTicks;
         releaseForcedChunk(player.server, crate.getUUID());
         SecretShowdownManager.broadcastSupplyClaim(player, config == null ? 20 : config.teamPoints);
         sendProgress(player, crate.getId(), openTicks(), openTicks(), false);
@@ -216,7 +221,7 @@ public final class SecretShowdownSupplyManager {
             return;
         }
         ACTIVE_DROPS.put(crate.getUUID(), new ActiveDrop(crate.getUUID(), level.dimension(), chunk, now));
-        SecretShowdownManager.broadcastSupplyDrop(server, target, level.dimension().location());
+        SecretShowdownManager.broadcastSupplyDrop(server);
     }
 
     private static void putContents(AirdropCrateEntity crate, ArsenalWeaponFactory.Result generated) {
@@ -301,6 +306,10 @@ public final class SecretShowdownSupplyManager {
         drop.forced = false;
     }
 
+    private static boolean hasUnclaimedDrop() {
+        return ACTIVE_DROPS.values().stream().anyMatch(drop -> !drop.claimed);
+    }
+
     private static void sendProgress(ServerPlayer player, int entityId, int progress, int total, boolean active) {
         SecretOperationsNetwork.CHANNEL.send(PacketDistributor.PLAYER.with(() -> player),
                 new SupplyCrateProgressPacket(entityId, progress, total, active));
@@ -365,7 +374,8 @@ public final class SecretShowdownSupplyManager {
             totalWeight += entry.weight;
             if (totalWeight > Integer.MAX_VALUE) return Resolution.error("supplyDrop.weaponsの重み合計が大きすぎます");
         }
-        return Resolution.ok(new ResolvedConfig(raw.enabled, dimension, minX, maxX, minZ, maxZ, raw.dropHeight,
+        return Resolution.ok(new ResolvedConfig(raw.enabled, raw.waitForClaimBeforeNextDrop,
+                dimension, minX, maxX, minZ, maxZ, raw.dropHeight,
                 raw.intervalSeconds * 20, raw.openSeconds * 20, raw.teamPoints, raw.personalPoints,
                 List.copyOf(weapons), (int) totalWeight));
     }
@@ -387,13 +397,15 @@ public final class SecretShowdownSupplyManager {
         final ChunkPos chunk;
         final long spawnTick;
         boolean forced = true;
+        boolean claimed;
         ActiveDrop(UUID crateId, ResourceKey<Level> dimension, ChunkPos chunk, long spawnTick) {
             this.crateId = crateId; this.dimension = dimension; this.chunk = chunk; this.spawnTick = spawnTick;
         }
     }
 
     private record WeightedWeapon(ArsenalWeaponStage stage, int weight) {}
-    private record ResolvedConfig(boolean enabled, ResourceKey<Level> dimension, double minX, double maxX,
+    private record ResolvedConfig(boolean enabled, boolean waitForClaimBeforeNextDrop,
+            ResourceKey<Level> dimension, double minX, double maxX,
             double minZ, double maxZ, int dropHeight, int intervalTicks, int openTicks, int teamPoints,
             int personalPoints, List<WeightedWeapon> weapons, int totalWeight) {}
     private record Resolution(ResolvedConfig config, String error) {

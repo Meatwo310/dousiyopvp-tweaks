@@ -2,8 +2,8 @@ package com.dousiyo.dpvptweaks.client.secretoperations;
 
 import com.dousiyo.airstrike.entity.AirdropCrateEntity;
 import com.dousiyo.dpvptweaks.DpvpTweaks;
-import com.dousiyo.dpvptweaks.network.SecretOperationsNetwork;
-import com.dousiyo.dpvptweaks.network.SupplyCrateHoldPacket;
+import com.dousiyo.dpvptweaks.network.secretoperations.SecretOperationsNetwork;
+import com.dousiyo.dpvptweaks.network.secretoperations.SupplyCrateHoldPacket;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.phys.EntityHitResult;
 import net.minecraftforge.api.distmarker.Dist;

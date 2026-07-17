@@ -21,6 +21,7 @@ public final class PvpStatsSavedData extends SavedData {
 
     private final Map<UUID, PlayerStats> players = new LinkedHashMap<>();
     private final LinkedHashSet<String> processedMatchIds = new LinkedHashSet<>();
+    private final Map<UUID, LinkedHashSet<String>> awardedBadges = new LinkedHashMap<>();
 
     public static PvpStatsSavedData load(CompoundTag tag) {
         PvpStatsSavedData data = new PvpStatsSavedData();
@@ -36,6 +37,21 @@ public final class PvpStatsSavedData extends SavedData {
             String matchId = element.getAsString();
             if (!matchId.isBlank()) {
                 data.processedMatchIds.add(matchId);
+            }
+        }
+        for (Tag element : tag.getList("AwardedBadges", Tag.TAG_COMPOUND)) {
+            if (!(element instanceof CompoundTag awardTag) || !awardTag.hasUUID("Uuid")) {
+                continue;
+            }
+            LinkedHashSet<String> badges = new LinkedHashSet<>();
+            for (Tag badgeTag : awardTag.getList("Badges", Tag.TAG_STRING)) {
+                String badgeId = badgeTag.getAsString();
+                if (!badgeId.isBlank()) {
+                    badges.add(badgeId);
+                }
+            }
+            if (!badges.isEmpty()) {
+                data.awardedBadges.put(awardTag.getUUID("Uuid"), badges);
             }
         }
         return data;
@@ -62,6 +78,18 @@ public final class PvpStatsSavedData extends SavedData {
             processedIdsTag.add(StringTag.valueOf(matchId));
         }
         tag.put("ProcessedMatchIds", processedIdsTag);
+        ListTag awardedBadgesTag = new ListTag();
+        for (Map.Entry<UUID, LinkedHashSet<String>> entry : awardedBadges.entrySet()) {
+            CompoundTag awardTag = new CompoundTag();
+            awardTag.putUUID("Uuid", entry.getKey());
+            ListTag badgesTag = new ListTag();
+            for (String badgeId : entry.getValue()) {
+                badgesTag.add(StringTag.valueOf(badgeId));
+            }
+            awardTag.put("Badges", badgesTag);
+            awardedBadgesTag.add(awardTag);
+        }
+        tag.put("AwardedBadges", awardedBadgesTag);
         return tag;
     }
 
@@ -97,5 +125,30 @@ public final class PvpStatsSavedData extends SavedData {
 
     public Set<String> processedMatchIds() {
         return Set.copyOf(processedMatchIds);
+    }
+
+    public Set<String> awardedBadges(UUID uuid) {
+        Set<String> badges = awardedBadges.get(uuid);
+        return badges == null ? Set.of() : Set.copyOf(badges);
+    }
+
+    public boolean awardBadge(UUID uuid, String badgeId) {
+        boolean added = awardedBadges.computeIfAbsent(uuid, ignored -> new LinkedHashSet<>()).add(badgeId);
+        if (added) {
+            setDirty();
+        }
+        return added;
+    }
+
+    public boolean revokeBadge(UUID uuid, String badgeId) {
+        LinkedHashSet<String> badges = awardedBadges.get(uuid);
+        if (badges == null || !badges.remove(badgeId)) {
+            return false;
+        }
+        if (badges.isEmpty()) {
+            awardedBadges.remove(uuid);
+        }
+        setDirty();
+        return true;
     }
 }

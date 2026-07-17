@@ -1,6 +1,8 @@
 package com.dousiyo.dpvptweaks.network;
 
 import com.dousiyo.dpvptweaks.DpvpTweaks;
+import com.dousiyo.dpvptweaks.network.session.SessionSeedPacket;
+import com.dousiyo.dpvptweaks.network.session.SessionStatePacket;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.network.NetworkRegistry;
 import net.minecraftforge.network.simple.SimpleChannel;

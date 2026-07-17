@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Collections;
 import java.util.UUID;
+import java.util.Set;
 import com.dousiyo.dpvptweaks.pvpstats.mode.PvpModeDefinition;
 import com.dousiyo.dpvptweaks.pvpstats.rank.RankState;
 
@@ -17,13 +18,14 @@ public record StatsGuiPayload(
         List<PvpModeDefinition> modeDefinitions,
         List<RankingEntry> rankingEntries,
         Map<String, RankState> ranks,
+        Set<String> awardedBadgeIds,
         PlayerPrivacySettings privacySettings,
         boolean editableSettings,
         boolean statsVisible,
         boolean historyVisible
 ) {
     public StatsGuiPayload(String targetName, AggregateStats global, Map<String, AggregateStats> modeStats, List<MatchRecord> recentMatches) {
-        this(new UUID(0L, 0L), targetName, global, modeStats, recentMatches, List.of(), List.of(), Map.of(), PlayerPrivacySettings.DEFAULT, false, true, true);
+        this(new UUID(0L, 0L), targetName, global, modeStats, recentMatches, List.of(), List.of(), Map.of(), Set.of(), PlayerPrivacySettings.DEFAULT, false, true, true);
     }
 
     public StatsGuiPayload {
@@ -42,6 +44,7 @@ public record StatsGuiPayload(
         modeDefinitions = modeDefinitions == null ? List.of() : List.copyOf(modeDefinitions);
         rankingEntries = rankingEntries == null ? List.of() : List.copyOf(rankingEntries);
         ranks = ranks == null ? Map.of() : Collections.unmodifiableMap(new LinkedHashMap<>(ranks));
+        awardedBadgeIds = awardedBadgeIds == null ? Set.of() : Set.copyOf(awardedBadgeIds);
         privacySettings = privacySettings == null ? PlayerPrivacySettings.DEFAULT : privacySettings;
         if (!statsVisible) {
             global = new AggregateStats();

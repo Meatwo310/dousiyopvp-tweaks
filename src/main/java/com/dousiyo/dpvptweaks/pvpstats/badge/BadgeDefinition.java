@@ -1,5 +1,5 @@
 package com.dousiyo.dpvptweaks.pvpstats.badge;
 
-/** Display-only badge metadata. No unlock or progress logic is implemented. */
+/** Metadata for an operator-awarded achievement. */
 public record BadgeDefinition(String id, String translationKey) {
 }

@@ -1,10 +1,13 @@
 package com.dousiyo.dpvptweaks.secretoperations;
 
-import com.dousiyo.dpvptweaks.network.SecretOperationsNetwork;
-import com.dousiyo.dpvptweaks.network.SecretOperationsStatePacket;
+import com.dousiyo.dpvptweaks.network.secretoperations.SecretOperationsNetwork;
+import com.dousiyo.dpvptweaks.network.secretoperations.SecretOperationsStatePacket;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.ai.attributes.AttributeInstance;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraftforge.network.PacketDistributor;
 
 import java.util.Set;
@@ -13,6 +16,8 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /** Shared participation state. Manual activation coexists with automatic match activation. */
 public final class SecretOperationsManager {
+    private static final UUID HEALTH_MODIFIER_ID = UUID.fromString("6c5f7ddc-9289-4d27-84a7-fbe88a8dd6df");
+    private static final double SECRET_OPERATIONS_MAX_HEALTH = 60.0D;
     private static final Set<UUID> MANUALLY_ACTIVE = ConcurrentHashMap.newKeySet();
 
     private SecretOperationsManager() {}
@@ -44,8 +49,29 @@ public final class SecretOperationsManager {
     }
 
     public static void sync(ServerPlayer player) {
+        boolean active = isActive(player);
+        updateHealth(player, active);
         SecretOperationsNetwork.CHANNEL.send(PacketDistributor.PLAYER.with(() -> player),
-                new SecretOperationsStatePacket(isActive(player)));
+                new SecretOperationsStatePacket(active));
+    }
+
+    private static void updateHealth(ServerPlayer player, boolean active) {
+        AttributeInstance health = player.getAttribute(Attributes.MAX_HEALTH);
+        if (health == null) return;
+        AttributeModifier modifier = health.getModifier(HEALTH_MODIFIER_ID);
+        if (!active) {
+            if (modifier != null) health.removeModifier(modifier);
+            if (player.getHealth() > player.getMaxHealth()) player.setHealth(player.getMaxHealth());
+            return;
+        }
+        if (modifier != null && Math.abs(health.getValue() - SECRET_OPERATIONS_MAX_HEALTH) < 0.001D) return;
+        boolean newlyApplied = modifier == null;
+        if (modifier != null) health.removeModifier(modifier);
+        double amount = SECRET_OPERATIONS_MAX_HEALTH - health.getValue();
+        health.addTransientModifier(new AttributeModifier(HEALTH_MODIFIER_ID, "Secret Operations max health", amount,
+                AttributeModifier.Operation.ADDITION));
+        if (newlyApplied) player.setHealth(player.getMaxHealth());
+        else if (player.getHealth() > player.getMaxHealth()) player.setHealth(player.getMaxHealth());
     }
 
     public static Component status(ServerPlayer player) {

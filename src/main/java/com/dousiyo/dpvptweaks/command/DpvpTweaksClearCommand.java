@@ -27,11 +27,15 @@ public class DpvpTweaksClearCommand {
         var players = EntityArgument.getPlayers(ctx, "players");
         int playerSize = players.size();
         for (ServerPlayer player : players) {
-            player.getInventory().items.clear();
-            player.getInventory().offhand.clear();
+            clearInventory(player);
         }
         ctx.getSource().sendSuccess(() -> Component.literal(playerSize + "人のプレイヤーのインベントリを空にしました"), true);
         return playerSize;
+    }
+
+    public static void clearInventory(ServerPlayer player) {
+        player.getInventory().items.clear();
+        player.getInventory().offhand.clear();
     }
 
     private static int clearArmor(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {

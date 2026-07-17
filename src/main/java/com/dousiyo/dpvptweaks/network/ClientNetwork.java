@@ -1,6 +1,9 @@
 package com.dousiyo.dpvptweaks.network;
 
 import com.dousiyo.dpvptweaks.DpvpTweaks;
+import com.dousiyo.dpvptweaks.network.loadout.OpenLoadoutGuiPacket;
+import com.dousiyo.dpvptweaks.network.loadout.OpenMiniLoadoutGuiPacket;
+import com.dousiyo.dpvptweaks.network.loadout.SelectLoadoutPacket;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.network.NetworkRegistry;
 import net.minecraftforge.network.simple.SimpleChannel;

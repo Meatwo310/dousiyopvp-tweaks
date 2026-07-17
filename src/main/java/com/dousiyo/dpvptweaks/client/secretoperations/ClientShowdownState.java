@@ -1,6 +1,6 @@
 package com.dousiyo.dpvptweaks.client.secretoperations;
 
-import com.dousiyo.dpvptweaks.network.SecretOperationsMatchStatePacket;
+import com.dousiyo.dpvptweaks.network.secretoperations.SecretOperationsMatchStatePacket;
 import com.dousiyo.dpvptweaks.secretoperations.SecretShowdownPhase;
 
 public final class ClientShowdownState {

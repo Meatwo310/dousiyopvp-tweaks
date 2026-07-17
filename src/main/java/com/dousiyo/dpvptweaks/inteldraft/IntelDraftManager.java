@@ -1,10 +1,10 @@
 package com.dousiyo.dpvptweaks.inteldraft;
 
 import com.dousiyo.dpvptweaks.DpvpTweaks;
-import com.dousiyo.dpvptweaks.network.CloseIntelDraftGuiPacket;
-import com.dousiyo.dpvptweaks.network.LoadoutGuiNetwork;
-import com.dousiyo.dpvptweaks.network.OpenIntelDraftGuiPacket;
-import com.dousiyo.dpvptweaks.network.IntelDraftStatePacket;
+import com.dousiyo.dpvptweaks.network.inteldraft.CloseIntelDraftGuiPacket;
+import com.dousiyo.dpvptweaks.network.loadout.LoadoutGuiNetwork;
+import com.dousiyo.dpvptweaks.network.inteldraft.OpenIntelDraftGuiPacket;
+import com.dousiyo.dpvptweaks.network.inteldraft.IntelDraftStatePacket;
 import com.dousiyo.dpvptweaks.secretoperations.SecretOperationsManager;
 import com.dousiyo.dpvptweaks.secretoperations.SecretShowdownManager;
 import com.dousiyo.dpvptweaks.secretoperations.SecretConvoyManager;
@@ -55,7 +55,7 @@ public final class IntelDraftManager {
             player.sendSystemMessage(Component.literal("Intel Draftの銃またはアタッチメント定義が空です"));
             return false;
         }
-        state.session = createSession(state, pool, pool.rerollCount(), null,
+        state.session = createSession(state, pool, null,
                 System.currentTimeMillis() + pool.sessionSeconds() * 1000L, false, true);
         send(player, state);
         return true;
@@ -76,7 +76,7 @@ public final class IntelDraftManager {
         PlayerState state = ensureState(player);
         IntelDraftDefinition.Pool pool = IntelDraftDefinitionLoader.get();
         if (pool.guns().isEmpty() || pool.attachments().isEmpty()) return false;
-        state.session = createSession(state, pool, pool.rerollCount(), null, Math.max(0L, expiresAtMillis), closeAllowed, false);
+        state.session = createSession(state, pool, null, Math.max(0L, expiresAtMillis), closeAllowed, false);
         send(player, state);
         return true;
     }
@@ -84,6 +84,13 @@ public final class IntelDraftManager {
     public static boolean hasSession(ServerPlayer player) {
         PlayerState state = STATES.get(player.getUUID());
         return state != null && state.session != null;
+    }
+
+    public static String matchValidationError() {
+        IntelDraftDefinition.Pool pool = IntelDraftDefinitionLoader.get();
+        if (pool.guns().isEmpty()) return "Intel Draftの銃定義が空です";
+        if (pool.attachments().isEmpty()) return "Intel Draftのアタッチメント定義が空です";
+        return null;
     }
 
     public static boolean reopenCurrent(ServerPlayer player, boolean closeAllowed) {
@@ -108,8 +115,9 @@ public final class IntelDraftManager {
     public static void reroll(ServerPlayer player, long sessionId) {
         PlayerState state = STATES.get(player.getUUID());
         Session old = validSession(player, state, sessionId);
-        if (old == null || old.remainingRerolls <= 0) return;
-        state.session = createSession(state, IntelDraftDefinitionLoader.get(), old.remainingRerolls - 1, old.choices,
+        if (old == null || state.remainingRerolls <= 0) return;
+        state.remainingRerolls--;
+        state.session = createSession(state, IntelDraftDefinitionLoader.get(), old.choices,
                 old.expiresAt, old.closeAllowed, old.enforceExpiry);
         send(player, state);
     }
@@ -174,19 +182,19 @@ public final class IntelDraftManager {
         return Component.literal("Intel Draft: active / 技術: " + names + (state.session == null ? "" : " / 選択待ち"));
     }
 
-    private static Session createSession(PlayerState state, IntelDraftDefinition.Pool pool, int rerolls,
+    private static Session createSession(PlayerState state, IntelDraftDefinition.Pool pool,
                                          List<IntelDraftDefinition.ChoiceDefinition> previous,
                                          long expiresAt, boolean closeAllowed, boolean enforceExpiry) {
         List<IntelDraftDefinition.ChoiceDefinition> choices = IntelDraftSampler.sample(pool, state.techs.keySet(), previous);
         long id;
         do id = ThreadLocalRandom.current().nextLong(1, Long.MAX_VALUE); while (id == 0);
-        return new Session(id, expiresAt, rerolls, List.copyOf(choices), closeAllowed, enforceExpiry);
+        return new Session(id, expiresAt, state.remainingRerolls, List.copyOf(choices), closeAllowed, enforceExpiry);
     }
 
     private static PlayerState ensureState(ServerPlayer player) {
         PlayerState existing = STATES.get(player.getUUID());
         if (existing != null) return existing;
-        PlayerState created = new PlayerState();
+        PlayerState created = new PlayerState(IntelDraftDefinitionLoader.get().rerollCount());
         PlayerState raced = STATES.putIfAbsent(player.getUUID(), created);
         PlayerState result = raced == null ? created : raced;
         if (raced == null) syncState(player, result);
@@ -293,7 +301,12 @@ public final class IntelDraftManager {
     private static final class PlayerState {
         final LinkedHashMap<ResourceLocation, IntelDraftDefinition.TechDefinition> techs = new LinkedHashMap<>();
         final HashMap<String, IntelDraftDefinition.TechDefinition> effects = new HashMap<>();
+        int remainingRerolls;
         volatile Session session;
+
+        PlayerState(int remainingRerolls) {
+            this.remainingRerolls = Math.max(0, remainingRerolls);
+        }
     }
     private record Session(long id, long expiresAt, int remainingRerolls,
                            List<IntelDraftDefinition.ChoiceDefinition> choices, boolean closeAllowed, boolean enforceExpiry) {}

@@ -1,7 +1,7 @@
 package com.dousiyo.dpvptweaks.secretoperations;
 
-import com.dousiyo.dpvptweaks.network.SecretConvoyHudStatePacket;
-import com.dousiyo.dpvptweaks.network.SecretOperationsNetwork;
+import com.dousiyo.dpvptweaks.network.secretoperations.SecretConvoyHudStatePacket;
+import com.dousiyo.dpvptweaks.network.secretoperations.SecretOperationsNetwork;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.network.PacketDistributor;

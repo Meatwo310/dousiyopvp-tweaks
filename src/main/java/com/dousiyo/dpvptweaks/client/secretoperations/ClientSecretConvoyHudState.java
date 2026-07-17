@@ -1,6 +1,6 @@
 package com.dousiyo.dpvptweaks.client.secretoperations;
 
-import com.dousiyo.dpvptweaks.network.SecretConvoyHudStatePacket;
+import com.dousiyo.dpvptweaks.network.secretoperations.SecretConvoyHudStatePacket;
 
 public final class ClientSecretConvoyHudState {
     private static volatile boolean visible;

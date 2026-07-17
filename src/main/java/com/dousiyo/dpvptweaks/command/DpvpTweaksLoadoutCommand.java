@@ -3,8 +3,8 @@ package com.dousiyo.dpvptweaks.command;
 import com.dousiyo.dpvptweaks.loadout.LoadoutDataManager;
 import com.dousiyo.dpvptweaks.loadout.LoadoutSessionManager;
 import com.dousiyo.dpvptweaks.loadout.RandomLoadoutProfileManager;
-import com.dousiyo.dpvptweaks.network.CloseLoadoutGuiPacket;
-import com.dousiyo.dpvptweaks.network.LoadoutGuiNetwork;
+import com.dousiyo.dpvptweaks.network.loadout.CloseLoadoutGuiPacket;
+import com.dousiyo.dpvptweaks.network.loadout.LoadoutGuiNetwork;
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
@@ -33,12 +33,6 @@ public class DpvpTweaksLoadoutCommand {
                                         LoadoutDataManager.setIds().stream().map(ResourceLocation::getPath), suggestions))
                                 .then(Commands.argument("players", EntityArgument.players())
                                         .executes(DpvpTweaksLoadoutCommand::openNamedLoadoutSet))))
-                // Keep the original datapack syntax working: dploadout <set> <players>
-                .then(Commands.argument("set", StringArgumentType.word())
-                        .suggests((ctx, suggestions) -> SharedSuggestionProvider.suggest(
-                                LoadoutDataManager.setIds().stream().map(ResourceLocation::getPath), suggestions))
-                        .then(Commands.argument("players", EntityArgument.players())
-                                .executes(DpvpTweaksLoadoutCommand::openNamedLoadoutSet)))
                 .then(randomCommand());
     }
     static void register(LiteralArgumentBuilder<CommandSourceStack> builder, RegisterCommandsEvent event) {
@@ -57,14 +51,6 @@ public class DpvpTweaksLoadoutCommand {
                 .then(Commands.literal("validate")
                         .executes(DpvpTweaksLoadoutCommand::validateLoadoutDefinitions))
                 .then(randomCommand())
-                .then(Commands.argument("players", EntityArgument.players())
-                        .executes(DpvpTweaksLoadoutCommand::openTbLoadoutGui))
-                .then(Commands.literal("tb")
-                        .then(Commands.argument("players", EntityArgument.players())
-                                .executes(DpvpTweaksLoadoutCommand::openTbLoadoutGui)))
-                .then(Commands.literal("tb_mini")
-                        .then(Commands.argument("players", EntityArgument.players())
-                                .executes(DpvpTweaksLoadoutCommand::openTbMiniLoadoutGui)))
                 .then(Commands.literal("close")
                         .then(Commands.argument("players", EntityArgument.players())
                                 .executes(DpvpTweaksLoadoutCommand::closeLoadoutGui)))
@@ -96,14 +82,6 @@ public class DpvpTweaksLoadoutCommand {
         return Command.SINGLE_SUCCESS;
     }
 
-    private static int openTbLoadoutGui(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
-        return openLoadoutSet(ctx, LoadoutDataManager.DEFAULT_LOADOUT_SET, false);
-    }
-
-    private static int openTbMiniLoadoutGui(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
-        return openLoadoutSet(ctx, LoadoutDataManager.DEFAULT_MINI_LOADOUT_SET, true);
-    }
-
     private static int openNamedLoadoutSet(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
         String rawSetId = StringArgumentType.getString(ctx, "set");
         ResourceLocation setId = LoadoutDataManager.parseSetId(rawSetId);
@@ -112,7 +90,8 @@ public class DpvpTweaksLoadoutCommand {
             return 0;
         }
 
-        return openLoadoutSet(ctx, setId, false);
+        boolean mini = LoadoutDataManager.DEFAULT_MINI_LOADOUT_SET.equals(setId);
+        return openLoadoutSet(ctx, setId, mini);
     }
 
     private static int openLoadoutSet(CommandContext<CommandSourceStack> ctx, ResourceLocation setId, boolean mini) throws CommandSyntaxException {

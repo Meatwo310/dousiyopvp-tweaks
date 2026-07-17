@@ -3,12 +3,14 @@ package com.dousiyo.dpvptweaks.inteldraft;
 import com.dousiyo.dpvptweaks.DpvpTweaks;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.DiggerItem;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraftforge.common.ForgeMod;
 import net.minecraftforge.event.TickEvent;
@@ -27,6 +29,8 @@ import java.util.UUID;
 public final class IntelDraftTechEffects {
     private static final UUID CROUCH_SPEED = UUID.fromString("72fd37b9-705c-4b72-9a9d-af36f6324121");
     private static final UUID SWIM_SPEED = UUID.fromString("d9870447-122f-4ab7-b04b-d541b0370dc0");
+    private static final ResourceLocation FIELD_MEDIC_BANDAGE =
+            ResourceLocation.fromNamespaceAndPath("roughtweaks", "bandage");
 
     private IntelDraftTechEffects() {}
 
@@ -40,6 +44,11 @@ public final class IntelDraftTechEffects {
         }
         if (tech.effect().type().equals("building_supplies")) TemporaryBuildingLoadout.grantExtraMaterials(player);
         if (tech.effect().type().equals("building_tool_upgrade")) TemporaryBuildingLoadout.upgradeTool(player);
+        if (tech.effect().type().equals("field_medic")) {
+            ItemStack bandage = new ItemStack(BuiltInRegistries.ITEM.get(FIELD_MEDIC_BANDAGE),
+                    (int)tech.effect().value("count", 1));
+            if (!player.getInventory().add(bandage)) player.drop(bandage, false);
+        }
     }
 
     static void clear(ServerPlayer player, Collection<IntelDraftDefinition.TechDefinition> techs) {
@@ -56,7 +65,6 @@ public final class IntelDraftTechEffects {
         data.remove("dpvptweaksIntelEmergencySpeed");
         data.remove("dpvptweaksIntelWeakTarget");
         data.remove("dpvptweaksIntelWeakHits");
-        data.remove("dpvptweaksIntelFieldMedic");
     }
 
     @SubscribeEvent
@@ -167,19 +175,6 @@ public final class IntelDraftTechEffects {
             if (player.level().getGameTime() - lastDamage >= (long)t.effect().value("delayTicks", 100)
                     && player.getAbsorptionAmount() < t.effect().value("max", 8.0))
                 player.setAbsorptionAmount((float)Math.min(t.effect().value("max", 8.0), player.getAbsorptionAmount() + t.effect().value("perPulse", 0.25)));
-        });
-    }
-
-    @SubscribeEvent
-    public static void onUseFinished(LivingEntityUseItemEvent.Finish event) {
-        if (!(event.getEntity() instanceof ServerPlayer player) || !event.getItem().isEdible()) return;
-        IntelDraftManager.findTech(player, "field_medic").ifPresent(t -> {
-            long now = player.level().getGameTime();
-            long last = player.getPersistentData().getLong("dpvptweaksIntelFieldMedic");
-            if (now - last >= (long)t.effect().value("cooldownTicks", 160)) {
-                player.getPersistentData().putLong("dpvptweaksIntelFieldMedic", now);
-                player.heal((float)t.effect().value("heal", 2));
-            }
         });
     }
 

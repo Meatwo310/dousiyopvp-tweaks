@@ -1,7 +1,7 @@
 package com.dousiyo.dpvptweaks.client.function.screen;
 
 import com.dousiyo.dpvptweaks.functionpalette.*;
-import com.dousiyo.dpvptweaks.network.FunctionPaletteNetwork;
+import com.dousiyo.dpvptweaks.network.functionpalette.FunctionPaletteNetwork;
 import com.dousiyo.dpvptweaks.network.functionpalette.c2s.*;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.*;

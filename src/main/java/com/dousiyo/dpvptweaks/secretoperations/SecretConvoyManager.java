@@ -30,8 +30,8 @@ import net.minecraftforge.event.server.ServerStoppedEvent;
 import net.minecraftforge.event.server.ServerStoppingEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
-import com.dousiyo.dpvptweaks.network.OpenSecretOperationsAdminPacket;
-import com.dousiyo.dpvptweaks.network.SecretOperationsNetwork;
+import com.dousiyo.dpvptweaks.network.secretoperations.OpenSecretOperationsAdminPacket;
+import com.dousiyo.dpvptweaks.network.secretoperations.SecretOperationsNetwork;
 import net.minecraftforge.network.PacketDistributor;
 
 import java.util.ArrayList;
@@ -122,7 +122,7 @@ public final class SecretConvoyManager {
 
     public static ActionResult randomize(MinecraftServer server) {
         if (activeMatch()) return ActionResult.error("試合中は編成できません");
-        List<ServerPlayer> players = eligible(server);
+        List<ServerPlayer> players = new ArrayList<>(eligible(server));
         if (players.size() < 2) return ActionResult.error("参加者が2人以上必要です");
         Collections.shuffle(players); PREVIEW.clear(); ensureTeams(server);
         int redCount = players.size() / 2 + (players.size() % 2 == 1 && ThreadLocalRandom.current().nextBoolean() ? 1 : 0);
@@ -138,6 +138,8 @@ public final class SecretConvoyManager {
             return ActionResult.error("時間は1～60分、ドラフト間隔は1～10分です");
         SecretOperationsConfig.ConvoyValidation validation = SecretOperationsConfig.validateConvoy(server);
         if (!validation.valid()) return ActionResult.error(validation.error());
+        String draftError = IntelDraftManager.matchValidationError();
+        if (draftError != null) return ActionResult.error(draftError);
         if (!TemporaryBuildingManager.canStartMatch(server)) return ActionResult.error("仮設ブロックをリセット中です");
         List<ServerPlayer> players = eligible(server);
         if (players.size() < 2) return ActionResult.error("参加者が2人以上必要です");
@@ -158,18 +160,23 @@ public final class SecretConvoyManager {
         roundMinutes = requestedMinutes; draftIntervalMinutes = requestedDraftInterval; round = 1;
         totalDistance = routeTotal(); travelledDistance = 0; firstRecord = null; PARTICIPANTS.clear();
         ensureTeams(server);
+        phase = SecretConvoyPhase.PREPARING;
+        phaseDeadline = server.overworld().getGameTime() + PREPARE_TICKS;
         for (ServerPlayer player : players) {
             Participant p = new Participant(player.getUUID(), PREVIEW.get(player.getUUID())); PARTICIPANTS.put(p.id, p);
             preparePlayer(server, player, p); IntelDraftManager.openMatch(player, false, System.currentTimeMillis() + 30_000L);
         }
-        phase = SecretConvoyPhase.PREPARING; phaseDeadline = server.overworld().getGameTime() + PREPARE_TICKS;
         broadcast(server, "SECRET: CONVOY - ROUND 1 TECH選択 30秒", ChatFormatting.GOLD);
         return ActionResult.ok("SECRET: CONVOYの準備を開始しました");
     }
 
     public static ActionResult stop(MinecraftServer server) {
-        if (!activeMatch()) return ActionResult.error("CONVOYは進行していません");
-        finish(server, null, true); return ActionResult.ok("CONVOYを中止しました");
+        if (!activeMatch()) {
+            IntelDraftManager.endAll(server);
+            return ActionResult.ok("CONVOYは進行していません。全プレイヤーの技術をリセットしました");
+        }
+        finish(server, null, true);
+        return ActionResult.ok("CONVOYを中止し、全プレイヤーの技術をリセットしました");
     }
 
     public static ActionResult reload(MinecraftServer server) {

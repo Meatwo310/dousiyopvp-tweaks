@@ -69,7 +69,7 @@ minecraft {
 repositories {
     mavenCentral()
     flatDir {
-        dir 'libs'
+        dirs 'libs', '../../airstrike/build/libs'
     }
 
     maven {
@@ -91,6 +91,13 @@ repositories {
         content {
             includeGroup "dev.latvian.mods"
             includeGroup "dev.latvian.apps"
+        }
+    }
+
+    maven {
+        url "https://api.modrinth.com/maven"
+        content {
+            includeGroup "maven.modrinth"
         }
     }
 }
@@ -127,7 +134,12 @@ dependencies {
     implementation fg.deobf("curse.maven:armourers-workshop-229523:6965580")
     implementation fg.deobf("curse.maven:timeless-and-classics-zero-1028108:8141310")
     compileOnly fg.deobf("curse.maven:timeless-and-classics-zero-1028108:8141310")
-    implementation fg.deobf("curse.maven:air-strike-1602430:8393503")
+    def localAirstrikeJar = file("../../airstrike/build/libs/airstrike-1.0.0.jar")
+    if (localAirstrikeJar.exists()) {
+        implementation fg.deobf("local.airstrike:airstrike:1.0.0")
+    } else {
+        implementation fg.deobf("curse.maven:air-strike-1602430:8393503")
+    }
     runtimeOnly fg.deobf("curse.maven:tacz-lesraisins-tactical-equipements-1273094:6751092")
     runtimeOnly fg.deobf("curse.maven:playeranimator-658587:4587214")
     runtimeOnly fg.deobf("curse.maven:cloth-config-348521:5729105")
@@ -138,6 +150,8 @@ dependencies {
     runtimeOnly fg.deobf("curse.maven:caelus-308989:5281700")
 
     compileOnly fg.deobf("curse.maven:parcool-482378:7518785")
+
+    runtimeOnly fg.deobf("maven.modrinth:rough-tweaks-revamped:1.20.x-1.1.2")
 
 }
 

@@ -24,8 +24,10 @@ public final class ArsenalSavedData extends SavedData {
     public UUID matchId;
     public UUID winner;
     public String weaponSetId = "";
+    public String previousSidebarObjective = "";
     public ArsenalWeaponSet snapshot;
     public boolean statsRecorded;
+    public long countdownEndGameTime;
     public final Map<UUID, ArsenalPlayerData> players = new LinkedHashMap<>();
 
     public static ArsenalSavedData get(MinecraftServer server) {
@@ -39,7 +41,9 @@ public final class ArsenalSavedData extends SavedData {
         if (root.hasUUID("MatchId")) data.matchId = root.getUUID("MatchId");
         if (root.hasUUID("Winner")) data.winner = root.getUUID("Winner");
         data.weaponSetId = root.getString("WeaponSetId");
+        data.previousSidebarObjective = root.getString("PreviousSidebarObjective");
         data.statsRecorded = root.getBoolean("StatsRecorded");
+        data.countdownEndGameTime = Math.max(0L, root.getLong("CountdownEnd"));
         if (root.contains("Snapshot", Tag.TAG_COMPOUND)) data.snapshot = readSet(root.getCompound("Snapshot"));
         for (Tag tag : root.getList("Players", Tag.TAG_COMPOUND)) {
             CompoundTag playerTag = (CompoundTag) tag;
@@ -64,7 +68,9 @@ public final class ArsenalSavedData extends SavedData {
         if (matchId != null) root.putUUID("MatchId", matchId);
         if (winner != null) root.putUUID("Winner", winner);
         root.putString("WeaponSetId", weaponSetId);
+        root.putString("PreviousSidebarObjective", previousSidebarObjective);
         root.putBoolean("StatsRecorded", statsRecorded);
+        root.putLong("CountdownEnd", countdownEndGameTime);
         if (snapshot != null) root.put("Snapshot", writeSet(snapshot));
         ListTag playerList = new ListTag();
         for (ArsenalPlayerData player : players.values()) {
@@ -82,8 +88,9 @@ public final class ArsenalSavedData extends SavedData {
     }
 
     public void clearMatch() {
-        state = ArsenalMatchState.WAITING; matchId = null; winner = null; weaponSetId = ""; snapshot = null;
-        statsRecorded = false; players.clear(); setDirty();
+        state = ArsenalMatchState.WAITING; matchId = null; winner = null; weaponSetId = "";
+        previousSidebarObjective = ""; snapshot = null;
+        statsRecorded = false; countdownEndGameTime = 0L; players.clear(); setDirty();
     }
 
     private static CompoundTag writeSet(ArsenalWeaponSet set) {

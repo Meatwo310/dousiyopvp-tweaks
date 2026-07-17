@@ -53,6 +53,8 @@ public final class ArsenalGameTests {
         original.state = ArsenalMatchState.RUNNING;
         original.matchId = UUID.randomUUID();
         original.weaponSetId = "test";
+        original.previousSidebarObjective = "previous_test";
+        original.countdownEndGameTime = 9876L;
         ArrayList<ArsenalWeaponStage> stages = new ArrayList<>(
                 Collections.nCopies(ArsenalWeaponSet.STAGE_COUNT, stage));
         ItemStack generic = new ItemStack(Items.BOW);
@@ -67,6 +69,10 @@ public final class ArsenalGameTests {
         ArsenalPlayerData loadedPlayer = loaded.players.get(player.playerId);
         if (loaded.state != ArsenalMatchState.RUNNING || loaded.snapshot == null || loaded.snapshot.stages().size() != 30)
             helper.fail("Match snapshot did not survive SavedData round-trip");
+        if (loaded.countdownEndGameTime != 9876L)
+            helper.fail("Start countdown did not survive SavedData round-trip");
+        if (!"previous_test".equals(loaded.previousSidebarObjective))
+            helper.fail("Previous sidebar objective did not survive SavedData round-trip");
         ItemStack loadedGeneric = loaded.snapshot.stages().get(5).itemTemplate();
         if (loaded.snapshot.stages().get(5).type() != ArsenalWeaponStage.Type.ITEM
                 || loadedGeneric.getItem() != Items.BOW

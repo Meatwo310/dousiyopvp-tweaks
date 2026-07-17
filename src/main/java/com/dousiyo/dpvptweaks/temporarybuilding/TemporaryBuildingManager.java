@@ -9,6 +9,8 @@ import net.minecraft.core.Direction;
 import net.minecraft.core.particles.BlockParticleOption;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.core.registries.Registries;
+import net.minecraft.ChatFormatting;
+import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
@@ -48,6 +50,7 @@ public final class TemporaryBuildingManager {
     private static final int MAX_CANDIDATE_SCAN = 20_000;
     private static final int MAX_COLLAPSE_PER_TICK = 256;
     private static final int MAX_RESET_PER_TICK = 512;
+    private static final long LIMIT_NOTICE_COOLDOWN_TICKS = 20L;
     private static final Direction[] SUPPORT_ORDER = {
             Direction.DOWN, Direction.NORTH, Direction.SOUTH, Direction.WEST, Direction.EAST, Direction.UP
     };
@@ -151,6 +154,12 @@ public final class TemporaryBuildingManager {
         BlockState placed = level.getBlockState(event.getPos());
         if (!placed.is(TemporaryBuildingTags.TEMPORARY_BLOCKS)) return;
         MatchState state = state(player.server);
+        String limitMessage = placementLimitMessage(state, player);
+        if (limitMessage != null) {
+            event.setCanceled(true);
+            notifyPlacementLimit(state, player, limitMessage);
+            return;
+        }
         Support support = validatePlacement(state, player, level, event.getPos());
         if (support == null) {
             event.setCanceled(true);
@@ -213,8 +222,6 @@ public final class TemporaryBuildingManager {
 
     private static Support validatePlacement(MatchState state, ServerPlayer player, ServerLevel level, BlockPos pos) {
         if (!state.matchLive || state.bridge == null || !state.bridge.canBuild(player) || !inside(state, level, pos)) return null;
-        if (state.totalBlocks >= MAX_BLOCKS_PER_MATCH || state.playerCounts.getOrDefault(player.getUUID(), 0) >= MAX_BLOCKS_PER_PLAYER)
-            return null;
         Long2ObjectOpenHashMap<Node> nodes = nodes(state, level.dimension());
         Support best = null;
         for (Direction direction : SUPPORT_ORDER) {
@@ -248,6 +255,24 @@ public final class TemporaryBuildingManager {
         String dimension = level.dimension().location().toString();
         state.savedData.add(dimension, packed);
         retainChunk(state, level, packed);
+    }
+
+    private static String placementLimitMessage(MatchState state, ServerPlayer player) {
+        if (!state.matchLive || state.bridge == null || !state.bridge.canBuild(player)) return null;
+        if (state.totalBlocks >= MAX_BLOCKS_PER_MATCH)
+            return "この試合の建築上限（" + MAX_BLOCKS_PER_MATCH + "個）に達しました";
+        int placed = state.playerCounts.getOrDefault(player.getUUID(), 0);
+        if (placed >= MAX_BLOCKS_PER_PLAYER)
+            return "あなたの建築上限（" + MAX_BLOCKS_PER_PLAYER + "個）に達しました";
+        return null;
+    }
+
+    private static void notifyPlacementLimit(MatchState state, ServerPlayer player, String message) {
+        long now = player.serverLevel().getGameTime();
+        long previous = state.limitNoticeTimes.getOrDefault(player.getUUID(), Long.MIN_VALUE);
+        if (previous != Long.MIN_VALUE && now - previous < LIMIT_NOTICE_COOLDOWN_TICKS) return;
+        state.limitNoticeTimes.put(player.getUUID(), now);
+        player.displayClientMessage(Component.literal(message).withStyle(ChatFormatting.RED), true);
     }
 
     private static void processRemovals(MinecraftServer server, MatchState state) {
@@ -405,6 +430,7 @@ public final class TemporaryBuildingManager {
     private static void completeReset(MinecraftServer server, MatchState state) {
         state.nodes.clear();
         state.playerCounts.clear();
+        state.limitNoticeTimes.clear();
         state.totalBlocks = 0;
         state.resetting = false;
         state.context = null;
@@ -458,6 +484,7 @@ public final class TemporaryBuildingManager {
         final Map<ResourceKey<Level>, Long2ObjectOpenHashMap<Node>> nodes = new java.util.HashMap<>();
         final Map<ResourceKey<Level>, Long2IntOpenHashMap> chunkReferences = new java.util.HashMap<>();
         final Map<UUID, Integer> playerCounts = new java.util.HashMap<>();
+        final Map<UUID, Long> limitNoticeTimes = new java.util.HashMap<>();
         final java.util.Set<BlockRef> removedThisTick = new java.util.LinkedHashSet<>();
         final ArrayDeque<BlockRef> collapseQueue = new ArrayDeque<>();
         final java.util.Set<BlockRef> collapseSet = new java.util.HashSet<>();

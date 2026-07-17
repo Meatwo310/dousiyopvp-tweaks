@@ -95,6 +95,10 @@ public final class OpenStatsGuiPacket {
             buf.writeVarInt(entry.getValue().peakRating());
             buf.writeVarInt(entry.getValue().placementMatches());
         }
+        buf.writeVarInt(packet.payload.awardedBadgeIds().size());
+        for (String badgeId : packet.payload.awardedBadgeIds()) {
+            buf.writeUtf(badgeId, 64);
+        }
     }
 
     public static OpenStatsGuiPacket decode(FriendlyByteBuf buf) {
@@ -166,6 +170,11 @@ public final class OpenStatsGuiPacket {
         for (int i = 0; i < rankCount; i++) {
             ranks.put(buf.readUtf(128), new RankState(buf.readVarInt(), buf.readVarInt(), buf.readVarInt()));
         }
+        int badgeCount = buf.readVarInt();
+        LinkedHashSet<String> awardedBadgeIds = new LinkedHashSet<>();
+        for (int i = 0; i < badgeCount; i++) {
+            awardedBadgeIds.add(buf.readUtf(64));
+        }
         return new OpenStatsGuiPacket(new StatsGuiPayload(
                 targetId,
                 targetName,
@@ -175,6 +184,7 @@ public final class OpenStatsGuiPacket {
                 modeDefinitions,
                 rankingEntries,
                 ranks,
+                awardedBadgeIds,
                 privacySettings,
                 editableSettings,
                 statsVisible,

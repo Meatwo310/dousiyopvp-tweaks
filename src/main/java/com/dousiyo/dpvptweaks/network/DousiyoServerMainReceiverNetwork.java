@@ -1,6 +1,7 @@
 package com.dousiyo.dpvptweaks.network;
 
 import com.dousiyo.dpvptweaks.DpvpTweaks;
+import com.dousiyo.dpvptweaks.network.loadout.SelectLoadoutPacket;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.network.NetworkDirection;

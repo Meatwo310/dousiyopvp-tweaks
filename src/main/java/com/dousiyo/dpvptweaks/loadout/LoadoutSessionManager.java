@@ -1,9 +1,10 @@
 package com.dousiyo.dpvptweaks.loadout;
 
 import com.dousiyo.dpvptweaks.DpvpTweaks;
-import com.dousiyo.dpvptweaks.network.LoadoutGuiNetwork;
-import com.dousiyo.dpvptweaks.network.OpenLoadoutGuiPacket;
-import com.dousiyo.dpvptweaks.network.OpenMiniLoadoutGuiPacket;
+import com.dousiyo.dpvptweaks.command.DpvpTweaksClearCommand;
+import com.dousiyo.dpvptweaks.network.loadout.LoadoutGuiNetwork;
+import com.dousiyo.dpvptweaks.network.loadout.OpenLoadoutGuiPacket;
+import com.dousiyo.dpvptweaks.network.loadout.OpenMiniLoadoutGuiPacket;
 import net.minecraft.commands.CommandFunction;
 import net.minecraft.commands.CommandSource;
 import net.minecraft.commands.CommandSourceStack;
@@ -80,7 +81,7 @@ public final class LoadoutSessionManager {
     private static void apply(ServerPlayer player, LoadoutDefinition loadout) {
         try {
             CommandSourceStack source = silentCommandSource(player);
-            int applied = player.server.getCommands().performPrefixedCommand(source, "loadout apply " + loadout.id() + " @s");
+            int applied = applySavedLoadout(player, source, loadout.id());
             if (applied <= 0) {
                 player.displayClientMessage(Component.literal("Failed to apply saved loadout: " + loadout.id()), false);
                 return;
@@ -120,8 +121,7 @@ public final class LoadoutSessionManager {
 
         try {
             CommandSourceStack source = silentCommandSource(player);
-            int applied = player.server.getCommands().performPrefixedCommand(source,
-                    "loadout apply " + entry.random().template() + " @s");
+            int applied = applySavedLoadout(player, source, entry.random().template());
             if (applied <= 0) {
                 player.displayClientMessage(Component.literal("ランダムロードアウトのテンプレートを適用できませんでした: "
                         + entry.random().template()), false);
@@ -147,6 +147,11 @@ public final class LoadoutSessionManager {
         Optional<CommandFunction> function = player.server.getFunctions().get(functionId);
         if (function.isEmpty()) throw new IllegalStateException("After-apply function not found: " + functionId);
         player.server.getFunctions().execute(function.get(), source);
+    }
+
+    private static int applySavedLoadout(ServerPlayer player, CommandSourceStack source, String loadoutId) {
+        DpvpTweaksClearCommand.clearInventory(player);
+        return player.server.getCommands().performPrefixedCommand(source, "loadout equip " + loadoutId + " @s");
     }
 
     private static CommandSourceStack silentCommandSource(ServerPlayer player) {

@@ -2,8 +2,8 @@ package com.dousiyo.dpvptweaks.client.sync;
 
 import com.dousiyo.dpvptweaks.DpvpTweaks;
 import com.dousiyo.dpvptweaks.network.RelayNetwork;
-import com.dousiyo.dpvptweaks.network.SessionSeedPacket;
-import com.dousiyo.dpvptweaks.network.SessionStatePacket;
+import com.dousiyo.dpvptweaks.network.session.SessionSeedPacket;
+import com.dousiyo.dpvptweaks.network.session.SessionStatePacket;
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.event.TickEvent;

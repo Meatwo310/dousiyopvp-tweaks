@@ -1,6 +1,6 @@
 package com.dousiyo.dpvptweaks.client.secretoperations;
 
-import com.dousiyo.dpvptweaks.network.SupplyCrateProgressPacket;
+import com.dousiyo.dpvptweaks.network.secretoperations.SupplyCrateProgressPacket;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.util.Mth;

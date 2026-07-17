@@ -2,15 +2,11 @@ package com.dousiyo.dpvptweaks.pvpstats.badge;
 
 import java.util.List;
 
-/** Display-only badge catalog. Award and progress systems are intentionally absent. */
+/** Catalog of achievements that can be awarded by server operators. */
 public final class BadgeSystem {
     public static final List<BadgeDefinition> DEFINITIONS = List.of(
-            badge("first_blood"),
-            badge("hunter"),
-            badge("executioner"),
-            badge("legendary_slayer"),
-            badge("victor"),
-            badge("veteran")
+            badge("debugger"),
+            badge("supporter")
     );
 
     private BadgeSystem() {
@@ -18,5 +14,9 @@ public final class BadgeSystem {
 
     private static BadgeDefinition badge(String id) {
         return new BadgeDefinition(id, "gui.dpvptweaks.combat_record.badge." + id);
+    }
+
+    public static boolean contains(String id) {
+        return DEFINITIONS.stream().anyMatch(definition -> definition.id().equals(id));
     }
 }

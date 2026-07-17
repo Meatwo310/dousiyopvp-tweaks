@@ -3,17 +3,17 @@ package com.dousiyo.dpvptweaks.secretoperations;
 import com.dousiyo.dpvptweaks.DpvpTweaks;
 import com.dousiyo.dpvptweaks.inteldraft.IntelDraftDefinitionLoader;
 import com.dousiyo.dpvptweaks.inteldraft.IntelDraftManager;
-import com.dousiyo.dpvptweaks.network.OpenSecretOperationsAdminPacket;
-import com.dousiyo.dpvptweaks.network.SecretOperationsMatchStatePacket;
-import com.dousiyo.dpvptweaks.network.SecretOperationsNetwork;
+import com.dousiyo.dpvptweaks.network.secretoperations.OpenSecretOperationsAdminPacket;
+import com.dousiyo.dpvptweaks.network.secretoperations.SecretOperationsMatchStatePacket;
+import com.dousiyo.dpvptweaks.network.secretoperations.SecretOperationsNetwork;
 import com.dousiyo.dpvptweaks.temporarybuilding.TemporaryBuildingLoadout;
 import com.dousiyo.dpvptweaks.temporarybuilding.TemporaryBuildingManager;
 import com.dousiyo.dpvptweaks.arsenal.ArsenalMatchManager;
 import com.dousiyo.dpvptweaks.temporarybuilding.TemporaryBuildingMatchContext;
 import net.minecraft.ChatFormatting;
-import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.game.ClientboundSetTitleTextPacket;
+import net.minecraft.network.protocol.game.ClientboundSetTitlesAnimationPacket;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
@@ -48,9 +48,10 @@ import java.util.concurrent.ThreadLocalRandom;
 /** Server-authoritative lifecycle for SECRET: SHOWDOWN. */
 @Mod.EventBusSubscriber(modid = DpvpTweaks.MODID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public final class SecretShowdownManager {
-    public static final int DEFAULT_DURATION_MINUTES = 10;
+    public static final int DEFAULT_DURATION_MINUTES = 20;
     public static final int DEFAULT_DRAFT_INTERVAL_MINUTES = 2;
     private static final int INITIAL_DRAFT_TICKS = 30 * 20;
+    private static final int START_COUNTDOWN_SECONDS = 5;
     private static final int RESPAWN_DELAY_TICKS = 3 * 20;
     private static final int STARTER_GUN_SLOT = 0;
     private static final ResourceLocation STARTER_GUN_ID = new ResourceLocation("tacz", "glock_17");
@@ -60,7 +61,9 @@ public final class SecretShowdownManager {
     private static final Set<UUID> CLEANUP_ON_LOGIN = java.util.concurrent.ConcurrentHashMap.newKeySet();
     private static SecretShowdownPhase phase = SecretShowdownPhase.IDLE;
     private static long phaseDeadline;
+    private static long initialDraftDeadline;
     private static long nextDraftGrant;
+    private static int lastCountdownSecond;
     private static int durationMinutes = DEFAULT_DURATION_MINUTES;
     private static int draftIntervalMinutes = DEFAULT_DRAFT_INTERVAL_MINUTES;
     private static int redScore;
@@ -80,6 +83,7 @@ public final class SecretShowdownManager {
         PARTICIPANTS.clear();
         PREVIEW.clear();
         phase = SecretShowdownPhase.IDLE;
+        SecretOperationsParachuteManager.clearTracking();
     }
 
     @SubscribeEvent
@@ -109,7 +113,14 @@ public final class SecretShowdownManager {
             }
         }
 
-        if (phase == SecretShowdownPhase.PREPARING && now >= phaseDeadline) beginActive(server, now);
+        if (phase == SecretShowdownPhase.PREPARING) {
+            if (initialDraftDeadline > 0L && now >= initialDraftDeadline) {
+                autoSelectInitialDrafts(server);
+                initialDraftDeadline = 0L;
+            }
+            updateStartCountdown(server, now);
+            if (now >= phaseDeadline) beginActive(server, now);
+        }
         if (phase == SecretShowdownPhase.ACTIVE) {
             if (now >= nextDraftGrant) {
                 grantDraftTokens(server);
@@ -139,6 +150,7 @@ public final class SecretShowdownManager {
             player.setGameMode(GameType.ADVENTURE);
             player.setInvulnerable(false);
             IntelDraftManager.end(player);
+            SecretOperationsParachuteManager.restore(player);
         }
         if (phase == SecretShowdownPhase.IDLE) return;
         Participant retained = PARTICIPANTS.get(player.getUUID());
@@ -247,7 +259,7 @@ public final class SecretShowdownManager {
 
     public static ActionResult randomize(MinecraftServer server) {
         if (phase != SecretShowdownPhase.IDLE) return ActionResult.error("試合中は編成できません");
-        List<ServerPlayer> eligible = eligible(server);
+        List<ServerPlayer> eligible = new ArrayList<>(eligible(server));
         if (eligible.size() < 2) return ActionResult.error("参加者が2人以上必要です");
         Collections.shuffle(eligible);
         PREVIEW.clear();
@@ -274,8 +286,12 @@ public final class SecretShowdownManager {
         String supplyError = SecretShowdownSupplyManager.validationError(server, validation);
         if (supplyError != null) return ActionResult.error(supplyError);
         if (starterGunStack().isEmpty()) return ActionResult.error("TACZのGlock 17 (tacz:glock_17) が見つかりません");
+        String draftError = IntelDraftManager.matchValidationError();
+        if (draftError != null) return ActionResult.error(draftError);
         List<ServerPlayer> eligible = eligible(server);
         if (eligible.size() < 2) return ActionResult.error("参加者が2人以上必要です");
+        String parachuteError = SecretOperationsParachuteManager.validationError(eligible);
+        if (parachuteError != null) return ActionResult.error(parachuteError);
         Set<UUID> ids = eligible.stream().map(ServerPlayer::getUUID).collect(java.util.stream.Collectors.toSet());
         if (!PREVIEW.isEmpty() && !PREVIEW.keySet().equals(ids)) return ActionResult.error("参加者が変化しました。再編成してください");
         if (PREVIEW.isEmpty()) {
@@ -300,7 +316,9 @@ public final class SecretShowdownManager {
         PARTICIPANTS.clear();
         phase = SecretShowdownPhase.PREPARING;
         long now = server.overworld().getGameTime();
-        phaseDeadline = now + INITIAL_DRAFT_TICKS;
+        initialDraftDeadline = now + INITIAL_DRAFT_TICKS;
+        phaseDeadline = initialDraftDeadline + START_COUNTDOWN_SECONDS * 20L;
+        lastCountdownSecond = -1;
         for (ServerPlayer player : eligible) {
             Participant participant = prepareNewParticipant(server, player, PREVIEW.get(player.getUUID()), DraftPurpose.INITIAL);
             openDraft(player, participant, false, System.currentTimeMillis() + 30_000L);
@@ -311,9 +329,13 @@ public final class SecretShowdownManager {
     }
 
     public static ActionResult stop(MinecraftServer server) {
-        if (phase == SecretShowdownPhase.IDLE) return ActionResult.error("試合は進行していません");
+        if (phase == SecretShowdownPhase.IDLE) {
+            IntelDraftManager.endAll(server);
+            SecretOperationsParachuteManager.restoreAll(server);
+            return ActionResult.ok("試合は進行していません。全プレイヤーの技術をリセットしました");
+        }
         finish(server, null, true);
-        return ActionResult.ok("試合を中止しました");
+        return ActionResult.ok("試合を中止し、全プレイヤーの技術をリセットしました");
     }
 
     public static ActionResult reload(MinecraftServer server) {
@@ -382,11 +404,8 @@ public final class SecretShowdownManager {
     }
 
     private static void beginActive(MinecraftServer server, long now) {
-        for (Participant participant : PARTICIPANTS.values()) {
-            if (participant.purpose != DraftPurpose.INITIAL) continue;
-            ServerPlayer player = server.getPlayerList().getPlayer(participant.id);
-            if (player != null && !participant.selected) IntelDraftManager.autoSelectCurrent(player);
-        }
+        autoSelectInitialDrafts(server);
+        initialDraftDeadline = 0L;
         phase = SecretShowdownPhase.ACTIVE;
         phaseDeadline = now + durationMinutes * 60L * 20L;
         nextDraftGrant = now + draftIntervalMinutes * 60L * 20L;
@@ -397,8 +416,35 @@ public final class SecretShowdownManager {
                     || participant.purpose == DraftPurpose.LATE_INITIAL))
                 launchFromAir(server, player, participant);
         }
+        sendCountdownTitle(server, "START!", ChatFormatting.GOLD, 20);
         broadcast(server, Component.literal("SECRET: SHOWDOWN START").withStyle(ChatFormatting.GOLD));
         syncAll(server);
+    }
+
+    private static void autoSelectInitialDrafts(MinecraftServer server) {
+        for (Participant participant : PARTICIPANTS.values()) {
+            if (participant.purpose != DraftPurpose.INITIAL || participant.selected) continue;
+            ServerPlayer player = server.getPlayerList().getPlayer(participant.id);
+            if (player != null) IntelDraftManager.autoSelectCurrent(player);
+        }
+    }
+
+    private static void updateStartCountdown(MinecraftServer server, long now) {
+        if (initialDraftDeadline > 0L || now >= phaseDeadline) return;
+        int remaining = (int)Math.ceil((phaseDeadline - now) / 20.0D);
+        if (remaining < 1 || remaining > START_COUNTDOWN_SECONDS || remaining == lastCountdownSecond) return;
+        lastCountdownSecond = remaining;
+        ChatFormatting color = remaining <= 3 ? ChatFormatting.RED : ChatFormatting.YELLOW;
+        sendCountdownTitle(server, Integer.toString(remaining), color, 25);
+    }
+
+    private static void sendCountdownTitle(MinecraftServer server, String text, ChatFormatting color, int stayTicks) {
+        for (Participant participant : PARTICIPANTS.values()) {
+            ServerPlayer player = server.getPlayerList().getPlayer(participant.id);
+            if (player == null) continue;
+            player.connection.send(new ClientboundSetTitlesAnimationPacket(0, stayTicks, 0));
+            player.connection.send(new ClientboundSetTitleTextPacket(Component.literal(text).withStyle(color)));
+        }
     }
 
     private static void beginRespawn(MinecraftServer server, ServerPlayer player, Participant participant) {
@@ -448,6 +494,8 @@ public final class SecretShowdownManager {
         player.getInventory().clearContent();
         grantStarterGun(player);
         TemporaryBuildingLoadout.grantInitial(player);
+        if (!SecretOperationsParachuteManager.equip(player))
+            DpvpTweaks.LOGGER.error("Could not equip SECRET SHOWDOWN parachute for {}", player.getGameProfile().getName());
         player.containerMenu.broadcastChanges();
         Participant participant = new Participant(player.getUUID(), side);
         participant.waiting = true;
@@ -474,7 +522,9 @@ public final class SecretShowdownManager {
 
     private static void openDraft(ServerPlayer player, Participant participant, boolean closeAllowed, long expiresAtMillis) {
         participant.sessionReserved = false;
-        IntelDraftManager.openMatch(player, closeAllowed, expiresAtMillis);
+        if (!IntelDraftManager.openMatch(player, closeAllowed, expiresAtMillis))
+            player.sendSystemMessage(Component.literal("Intel Draftの選択画面を開けませんでした。設定を確認してください")
+                    .withStyle(ChatFormatting.RED));
     }
 
     private static void holdAtWaiting(MinecraftServer server, ServerPlayer player, Participant participant) {
@@ -535,12 +585,14 @@ public final class SecretShowdownManager {
             player.containerMenu.broadcastChanges();
             player.setGameMode(GameType.ADVENTURE);
             IntelDraftManager.end(player);
+            SecretOperationsParachuteManager.restore(player);
         }
         IntelDraftManager.endAll(server);
         PARTICIPANTS.clear();
         PREVIEW.clear();
         phase = SecretShowdownPhase.IDLE;
-        phaseDeadline = nextDraftGrant = 0L;
+        phaseDeadline = initialDraftDeadline = nextDraftGrant = 0L;
+        lastCountdownSecond = -1;
         onlineParticipants.forEach(SecretShowdownManager::syncInactive);
     }
 
@@ -609,9 +661,8 @@ public final class SecretShowdownManager {
             if (PARTICIPANTS.containsKey(player.getUUID())) player.sendSystemMessage(message);
     }
 
-    static void broadcastSupplyDrop(MinecraftServer server, BlockPos position, ResourceLocation dimension) {
-        broadcast(server, Component.literal("補給物資を投下: " + dimension + " [" + position.getX() + ", "
-                + position.getY() + ", " + position.getZ() + "]").withStyle(ChatFormatting.AQUA));
+    static void broadcastSupplyDrop(MinecraftServer server) {
+        broadcast(server, Component.literal("補給物資を投下").withStyle(ChatFormatting.AQUA));
     }
 
     static void broadcastSupplyClaim(ServerPlayer opener, int teamPoints) {
@@ -646,7 +697,8 @@ public final class SecretShowdownManager {
     private static void resetMemory() {
         PARTICIPANTS.clear(); PREVIEW.clear(); CLEANUP_ON_LOGIN.clear(); phase = SecretShowdownPhase.IDLE;
         durationMinutes = DEFAULT_DURATION_MINUTES; draftIntervalMinutes = DEFAULT_DRAFT_INTERVAL_MINUTES;
-        redScore = blueScore = 0; phaseDeadline = nextDraftGrant = 0L;
+        redScore = blueScore = 0; phaseDeadline = initialDraftDeadline = nextDraftGrant = 0L;
+        lastCountdownSecond = -1;
     }
 
     private enum TeamSide {

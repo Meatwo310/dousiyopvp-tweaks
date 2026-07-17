@@ -481,19 +481,20 @@ public class PvpStatsScreen extends Screen {
     private void renderBadgePage(GuiGraphics gg) {
         drawTrimmed(gg, text("badge.category"), this.leftPos + 6, this.topPos + 50, 64, 0x9FD9E9);
         renderTextButton(gg, new Rect(6, 64, 60, MODE_ROW_HEIGHT),
-                Component.translatable(key("badge.category.combat")), true, false, -1, -1);
+                Component.translatable(key("badge.category.special")), true, false, -1, -1);
         drawTrimmed(gg, text("badge.title"), this.leftPos + 84, this.topPos + 68, 150, 0xF2FBFF);
-        drawTrimmed(gg, text("badge.disabled"), this.leftPos + 206, this.topPos + 68, 100, 0x7898A4);
 
         List<BadgeDefinition> badges = BadgeSystem.DEFINITIONS;
         for (int i = 0; i < badges.size(); i++) {
             BadgeDefinition badge = badges.get(i);
             int x = this.leftPos + 84 + (i % 2) * 114;
             int y = this.topPos + 82 + (i / 2) * 31;
+            boolean awarded = this.payload.awardedBadgeIds().contains(badge.id());
             gg.fill(x, y, x + 108, y + 27, 0xA00A1C23);
-            gg.fill(x, y, x + 2, y + 27, 0xFF435B66);
-            drawTrimmed(gg, I18n.get(badge.translationKey()), x + 7, y + 4, 94, 0xBFD6DE);
-            drawTrimmed(gg, text("badge.not_implemented"), x + 7, y + 15, 94, 0x7898A4);
+            gg.fill(x, y, x + 2, y + 27, awarded ? 0xFFFFC857 : 0xFF435B66);
+            drawTrimmed(gg, I18n.get(badge.translationKey()), x + 7, y + 4, 94, awarded ? 0xFFFFE29A : 0xBFD6DE);
+            drawTrimmed(gg, text(awarded ? "badge.awarded" : "badge.operator_awarded"), x + 7, y + 15, 94,
+                    awarded ? 0xFFFFC857 : 0x7898A4);
         }
     }
 

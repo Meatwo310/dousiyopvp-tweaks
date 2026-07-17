@@ -1,6 +1,6 @@
 package com.dousiyo.dpvptweaks.network.functionpalette.c2s;
 
-import com.dousiyo.dpvptweaks.network.FunctionPaletteNetwork;
+import com.dousiyo.dpvptweaks.network.functionpalette.FunctionPaletteNetwork;
 import com.dousiyo.dpvptweaks.network.functionpalette.s2c.FunctionResultPacket;
 import com.dousiyo.dpvptweaks.server.function.FunctionService;
 import net.minecraft.network.FriendlyByteBuf;

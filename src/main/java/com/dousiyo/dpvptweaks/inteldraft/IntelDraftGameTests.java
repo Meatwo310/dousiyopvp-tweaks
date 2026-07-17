@@ -3,6 +3,7 @@ package com.dousiyo.dpvptweaks.inteldraft;
 import com.dousiyo.dpvptweaks.DpvpTweaks;
 import com.tacz.guns.api.TimelessAPI;
 import com.tacz.guns.api.item.IGun;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.gametest.framework.GameTest;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.resources.ResourceLocation;
@@ -39,6 +40,8 @@ public final class IntelDraftGameTests {
         if (!effects.contains("building_supplies")) helper.fail("Building supplies tech is missing");
         if (!effects.contains("building_tool_upgrade")) helper.fail("Building tool upgrade tech is missing");
         if (!effects.contains("incendiary_ammo")) helper.fail("Incendiary ammo tech is missing");
+        if (!BuiltInRegistries.ITEM.containsKey(ResourceLocation.fromNamespaceAndPath("roughtweaks", "bandage")))
+            helper.fail("Rough Tweaks Revamped bandage is missing");
         if (IntelDraftDefinitionLoader.attachmentStack(
                 ResourceLocation.fromNamespaceAndPath("tacz", "ammo_mod_i"), 1).isEmpty())
             helper.fail("Incendiary ammo attachment could not be built");

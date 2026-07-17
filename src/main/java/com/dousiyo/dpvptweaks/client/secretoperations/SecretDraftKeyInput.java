@@ -1,8 +1,8 @@
 package com.dousiyo.dpvptweaks.client.secretoperations;
 
 import com.dousiyo.dpvptweaks.DpvpTweaks;
-import com.dousiyo.dpvptweaks.network.OpenPendingSecretDraftPacket;
-import com.dousiyo.dpvptweaks.network.SecretOperationsNetwork;
+import com.dousiyo.dpvptweaks.network.secretoperations.OpenPendingSecretDraftPacket;
+import com.dousiyo.dpvptweaks.network.secretoperations.SecretOperationsNetwork;
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.event.TickEvent;

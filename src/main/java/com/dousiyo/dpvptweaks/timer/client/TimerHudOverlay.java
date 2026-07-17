@@ -1,31 +1,21 @@
 package com.dousiyo.dpvptweaks.timer.client;
 
-import com.dousiyo.dpvptweaks.DpvpTweaks;
 import com.dousiyo.dpvptweaks.timer.config.TimerClientConfig;
 import com.dousiyo.dpvptweaks.timer.core.TimerMode;
 import com.dousiyo.dpvptweaks.timer.core.TimerState;
-import com.mojang.blaze3d.systems.RenderSystem;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
 
 import java.util.Locale;
 
 public final class TimerHudOverlay {
-    private static final ResourceLocation FRAME_TEXTURE =
-            new ResourceLocation(DpvpTweaks.MODID, "textures/gui/timer/timer_frame.png");
-
-    private static final int TEXTURE_WIDTH = 512;
-    private static final int TEXTURE_HEIGHT = 112;
-    private static final int FRAME_WIDTH = 256;
-    private static final int FRAME_HEIGHT = 56;
-    private static final int HUD_Y = 6;
-    private static final int BAR_X = 18;
-    private static final int BAR_Y = 43;
-    private static final int BAR_WIDTH = 220;
-    private static final float TITLE_SCALE = 0.72F;
-    private static final float TIME_SCALE = 1.28F;
+    private static final int HUD_WIDTH = 184;
+    private static final int HUD_HEIGHT = 23;
+    private static final int HUD_Y = 5;
+    private static final int PADDING = 7;
+    private static final int PROGRESS_HEIGHT = 3;
+    private static final float TITLE_SCALE = 0.78F;
 
     private TimerHudOverlay() {}
 
@@ -36,115 +26,137 @@ public final class TimerHudOverlay {
             return;
         }
 
-        int x = computeX(screenW);
-        if (ClientTimerState.isFinishAnimating(mc)) {
-            renderFinishAnimation(gui, mc, x);
-            return;
-        }
         if (ClientTimerState.getMode() == TimerMode.COUNTDOWN
-                && ClientTimerState.getState() == TimerState.FINISHED) {
+                && ClientTimerState.getState() == TimerState.FINISHED
+                && !ClientTimerState.isFinishAnimating(mc)) {
             return;
         }
 
+        float hudScale = TimerClientConfig.HUD_SCALE.get().floatValue();
+        int x = computeX(screenW, hudScale);
+        gui.pose().pushPose();
+        gui.pose().translate(x, 0.0F, 0.0F);
+        gui.pose().scale(hudScale, hudScale, 1.0F);
+        try {
+            if (ClientTimerState.isFinishAnimating(mc)) {
+                renderFinishAnimation(gui, mc);
+            } else {
+                renderTimer(gui, mc);
+            }
+        } finally {
+            gui.pose().popPose();
+        }
+    }
+
+    private static void renderTimer(GuiGraphics gui, Minecraft mc) {
         int ticks = ClientTimerState.getDisplayTicks(mc);
         boolean countdown = ClientTimerState.getMode() == TimerMode.COUNTDOWN;
-        int accentColor = countdown ? resolveCountdownAlertColor(ClientTimerState.getDurationTicks(), ticks) : 0xFF29D9EA;
+        int accentColor = countdown
+                ? resolveCountdownAlertColor(ClientTimerState.getDurationTicks(), ticks)
+                : 0xFF49C6D4;
 
-        drawFrame(gui, x, HUD_Y, 1.0F);
-        drawStatusRail(gui, x, HUD_Y, ticks, countdown, accentColor);
+        drawPanel(gui, HUD_Y, accentColor, 255);
+        drawStateIndicator(gui, HUD_Y, accentColor);
+
+        String timeText = formatTicks(ticks);
+        int timeWidth = mc.font.width(timeText);
+        int timeX = HUD_WIDTH - PADDING - timeWidth;
+        gui.drawString(mc.font, timeText, timeX, HUD_Y + 6, 0xFFF4F7F8, false);
 
         Component title = ClientTimerState.getTitle();
         String titleText = title == null || title.getString().isBlank()
                 ? ClientTimerState.getTimerId()
                 : title.getString();
-        titleText = trimToWidth(mc, titleText, 112);
-
-        String modeText = countdown ? "COUNTDOWN" : "STOPWATCH";
-        gui.drawString(mc.font, modeText, x + 18, HUD_Y + 12, 0xFF708493, false);
+        int titleStart = PADDING + 9;
+        int titleRoom = Math.max(0, timeX - titleStart - 8);
+        titleText = trimToWidth(mc, titleText, Math.round(titleRoom / TITLE_SCALE));
 
         gui.pose().pushPose();
-        gui.pose().translate(x + 18, HUD_Y + 25, 0.0F);
+        gui.pose().translate(titleStart, HUD_Y + 7, 0.0F);
         gui.pose().scale(TITLE_SCALE, TITLE_SCALE, 1.0F);
-        gui.drawString(mc.font, titleText, 0, 0, 0xFFE7F7FA, false);
+        gui.drawString(mc.font, titleText, 0, 0, 0xFFD3DADD, false);
         gui.pose().popPose();
 
-        String timeText = formatTicks(ticks);
-        int scaledTimeWidth = (int) Math.ceil(mc.font.width(timeText) * TIME_SCALE);
-        gui.pose().pushPose();
-        gui.pose().translate(x + FRAME_WIDTH - 18 - scaledTimeWidth, HUD_Y + 20, 0.0F);
-        gui.pose().scale(TIME_SCALE, TIME_SCALE, 1.0F);
-        gui.drawString(mc.font, timeText, 0, 0, accentColor, true);
-        gui.pose().popPose();
-
-        gui.fill(x + 142, HUD_Y + 17, x + 143, HUD_Y + 37, 0x5536D5E5);
+        drawProgress(gui, HUD_Y, ticks, countdown, accentColor);
     }
 
-    private static void drawStatusRail(GuiGraphics gui, int x, int y, int ticks,
-                                       boolean countdown, int accentColor) {
-        gui.fill(x + BAR_X, y + BAR_Y, x + BAR_X + BAR_WIDTH, y + BAR_Y + 2, 0xCC16232B);
-        if (!countdown || ClientTimerState.getDurationTicks() <= 0) {
-            gui.fill(x + BAR_X, y + BAR_Y, x + BAR_X + BAR_WIDTH, y + BAR_Y + 1, accentColor);
-            return;
-        }
+    private static void drawPanel(GuiGraphics gui, int y, int accentColor, int alpha) {
+        int shadowAlpha = Math.round(alpha * 0.38F);
+        int panelAlpha = Math.round(alpha * 0.82F);
+        int borderAlpha = Math.round(alpha * 0.32F);
+        gui.fill(1, y + 1, HUD_WIDTH + 1, y + HUD_HEIGHT + 1, (shadowAlpha << 24));
+        gui.fill(0, y, HUD_WIDTH, y + HUD_HEIGHT, (panelAlpha << 24) | 0x090D10);
+        gui.fill(0, y, HUD_WIDTH, y + 1, (borderAlpha << 24) | 0xB8C6CC);
+        gui.fill(0, y, 2, y + HUD_HEIGHT, withAlpha(accentColor, alpha));
+    }
 
-        int duration = ClientTimerState.getDurationTicks();
-        int clampedTicks = Math.max(0, Math.min(duration, ticks));
-        int fillWidth = Math.round(BAR_WIDTH * (clampedTicks / (float) duration));
+    private static void drawStateIndicator(GuiGraphics gui, int y, int accentColor) {
+        int left = PADDING;
+        int top = y + 9;
+        if (ClientTimerState.getState() == TimerState.PAUSED) {
+            gui.fill(left, top - 2, left + 2, top + 4, accentColor);
+            gui.fill(left + 4, top - 2, left + 6, top + 4, accentColor);
+        } else {
+            gui.fill(left, top, left + 5, top + 5, accentColor);
+            gui.fill(left + 1, top - 1, left + 4, top + 6, accentColor);
+        }
+    }
+
+    private static void drawProgress(GuiGraphics gui, int y, int ticks,
+                                     boolean countdown, int accentColor) {
+        int barY = y + HUD_HEIGHT - PROGRESS_HEIGHT;
+        gui.fill(2, barY, HUD_WIDTH, y + HUD_HEIGHT, 0xCC151C20);
+
+        int fillWidth;
+        if (countdown && ClientTimerState.getDurationTicks() > 0) {
+            int duration = ClientTimerState.getDurationTicks();
+            int clampedTicks = Math.max(0, Math.min(duration, ticks));
+            fillWidth = Math.round((HUD_WIDTH - 2) * (clampedTicks / (float) duration));
+        } else {
+            fillWidth = HUD_WIDTH - 2;
+        }
         if (fillWidth > 0) {
-            gui.fill(x + BAR_X, y + BAR_Y, x + BAR_X + fillWidth, y + BAR_Y + 2, accentColor);
+            gui.fill(2, barY, 2 + fillWidth, y + HUD_HEIGHT, accentColor);
+            gui.fill(2, barY, 2 + fillWidth, barY + 1, withAlpha(0xFFFFFFFF, 76));
         }
-        int marker = x + BAR_X + fillWidth;
-        gui.fill(marker - 1, y + BAR_Y - 1, marker + 1, y + BAR_Y + 3, 0xFFF2FCFF);
     }
 
-    private static void renderFinishAnimation(GuiGraphics gui, Minecraft mc, int x) {
+    private static void renderFinishAnimation(GuiGraphics gui, Minecraft mc) {
         float progress = ClientTimerState.getFinishAnimProgress(mc);
         float alpha = 1.0F - progress;
-        int y = HUD_Y - Math.round(progress * 12.0F);
-        drawFrame(gui, x, y, alpha);
+        int y = HUD_Y - Math.round(progress * 5.0F);
+        int alphaByte = clamp(Math.round(alpha * 255.0F));
+        int accentColor = 0xFF49C6D4;
+        drawPanel(gui, y, accentColor, alphaByte);
 
         Component message = ClientTimerState.getFinishMessage();
         if (message == null || message.getString().isBlank()) {
             message = Component.literal("FINISHED");
         }
-        String text = trimToWidth(mc, message.getString(), 190);
-        float scale = 1.05F + progress * 0.08F;
-        int width = (int) Math.ceil(mc.font.width(text) * scale);
-        int color = (clamp(Math.round(alpha * 255.0F)) << 24) | 0xE9FBFF;
-
-        gui.pose().pushPose();
-        gui.pose().translate(x + (FRAME_WIDTH - width) / 2.0F, y + 22, 0.0F);
-        gui.pose().scale(scale, scale, 1.0F);
-        gui.drawString(mc.font, text, 0, 0, color, true);
-        gui.pose().popPose();
+        String text = trimToWidth(mc, message.getString(), HUD_WIDTH - PADDING * 2);
+        int color = (alphaByte << 24) | 0xE8F1F3;
+        gui.drawCenteredString(mc.font, text, HUD_WIDTH / 2, y + 7, color);
+        gui.fill(2, y + HUD_HEIGHT - PROGRESS_HEIGHT, HUD_WIDTH, y + HUD_HEIGHT,
+                withAlpha(accentColor, alphaByte));
     }
 
-    private static void drawFrame(GuiGraphics gui, int x, int y, float alpha) {
-        RenderSystem.enableBlend();
-        RenderSystem.defaultBlendFunc();
-        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, alpha);
-        gui.blit(FRAME_TEXTURE, x, y, FRAME_WIDTH, FRAME_HEIGHT,
-                0.0F, 0.0F, TEXTURE_WIDTH, TEXTURE_HEIGHT, TEXTURE_WIDTH, TEXTURE_HEIGHT);
-        RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-        RenderSystem.disableBlend();
-    }
-
-    private static int computeX(int screenW) {
+    private static int computeX(int screenW, float hudScale) {
+        int displayWidth = Math.round(HUD_WIDTH * hudScale);
         if (TimerClientConfig.HUD_POSITION.get() == TimerClientConfig.HudPosition.TOP_RIGHT) {
-            return screenW - FRAME_WIDTH - 10;
+            return screenW - displayWidth - 10;
         }
-        return (screenW - FRAME_WIDTH) / 2;
+        return (screenW - displayWidth) / 2;
     }
 
     private static int resolveCountdownAlertColor(int durationTicks, int remainingTicks) {
         if (remainingTicks <= 10 * 20) {
-            return 0xFFFF594D;
+            return 0xFFFF5D57;
         }
         int amberThreshold = durationTicks >= 10 * 60 * 20 ? 60 * 20 : 30 * 20;
         if (remainingTicks <= amberThreshold) {
-            return 0xFFFFB82E;
+            return 0xFFFFB84A;
         }
-        return 0xFF2DDBE8;
+        return 0xFF49C6D4;
     }
 
     private static String trimToWidth(Minecraft mc, String value, int maxWidth) {
@@ -153,6 +165,10 @@ public final class TimerHudOverlay {
         }
         String suffix = "...";
         return mc.font.plainSubstrByWidth(value, Math.max(0, maxWidth - mc.font.width(suffix))) + suffix;
+    }
+
+    private static int withAlpha(int color, int alpha) {
+        return (clamp(alpha) << 24) | (color & 0x00FFFFFF);
     }
 
     private static int clamp(int value) {

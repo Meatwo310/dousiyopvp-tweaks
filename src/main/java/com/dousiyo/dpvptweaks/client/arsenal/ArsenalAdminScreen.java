@@ -1,8 +1,8 @@
 package com.dousiyo.dpvptweaks.client.arsenal;
 
-import com.dousiyo.dpvptweaks.network.ArsenalAdminActionPacket;
-import com.dousiyo.dpvptweaks.network.ArsenalNetwork;
-import com.dousiyo.dpvptweaks.network.OpenArsenalAdminPacket;
+import com.dousiyo.dpvptweaks.network.arsenal.ArsenalAdminActionPacket;
+import com.dousiyo.dpvptweaks.network.arsenal.ArsenalNetwork;
+import com.dousiyo.dpvptweaks.network.arsenal.OpenArsenalAdminPacket;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;

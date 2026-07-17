@@ -14,6 +14,10 @@ public final class TimerClientConfig {
             .comment("Timer HUD position")
             .defineEnum("hudPosition", HudPosition.TOP_CENTER);
 
+    public static final ForgeConfigSpec.DoubleValue HUD_SCALE = BUILDER
+            .comment("Timer HUD scale (0.65 - 1.25)")
+            .defineInRange("hudScale", 1.0D, 0.65D, 1.25D);
+
     public static final ForgeConfigSpec SPEC = BUILDER.build();
 
     private TimerClientConfig() {}

@@ -1,8 +1,10 @@
 package com.dousiyo.dpvptweaks.secretoperations;
 
 import com.dousiyo.dpvptweaks.DpvpTweaks;
-import com.dousiyo.dpvptweaks.network.DamageFeedbackPacket;
-import com.dousiyo.dpvptweaks.network.SecretOperationsNetwork;
+import com.dousiyo.dpvptweaks.arsenal.ArsenalMatchManager;
+import com.dousiyo.dpvptweaks.config.ServerConfig;
+import com.dousiyo.dpvptweaks.network.secretoperations.DamageFeedbackPacket;
+import com.dousiyo.dpvptweaks.network.secretoperations.SecretOperationsNetwork;
 import com.tacz.guns.api.event.common.EntityHurtByGunEvent;
 import com.tacz.guns.api.event.common.EntityKillByGunEvent;
 import com.tacz.guns.api.event.common.GunDamageSourcePart;
@@ -58,7 +60,7 @@ public final class SecretOperationsDamageFeedbackEvents {
     @SubscribeEvent(priority = EventPriority.LOWEST, receiveCanceled = true)
     public static void rememberAbsorption(LivingHurtEvent event) {
         LivingEntity victim = event.getEntity();
-        if (event.isCanceled() || !isEnemySecretOperationsHit(event.getSource().getEntity(), victim)) return;
+        if (event.isCanceled() || !isEligibleHit(event.getSource().getEntity(), victim)) return;
         ABSORPTION_BEFORE_DAMAGE.put(victim.getUUID(), victim.getAbsorptionAmount());
     }
 
@@ -68,7 +70,7 @@ public final class SecretOperationsDamageFeedbackEvents {
 
         Float absorptionBefore = ABSORPTION_BEFORE_DAMAGE.remove(victim.getUUID());
         if (event.isCanceled() || !(event.getSource().getEntity() instanceof ServerPlayer attacker)
-                || !isEnemySecretOperationsHit(attacker, victim)) return;
+                || !isEligibleHit(attacker, victim)) return;
 
         float healthDamage = Math.max(0.0F, event.getAmount());
         float shieldDamage = absorptionBefore == null ? 0.0F
@@ -95,10 +97,21 @@ public final class SecretOperationsDamageFeedbackEvents {
                 new DamageFeedbackPacket(hit.victim.getId(), hit.healthDamage, hit.shieldDamage, hit.headshot));
     }
 
-    private static boolean isEnemySecretOperationsHit(Object sourceEntity, LivingEntity victim) {
+    private static boolean isEligibleHit(Object sourceEntity, LivingEntity victim) {
         if (!(sourceEntity instanceof ServerPlayer attacker) || attacker == victim) return false;
         if (!DamageFeedbackManager.isEnabled()) return false;
-        return !attacker.isAlliedTo(victim);
+        if (victim instanceof ServerPlayer victimPlayer
+                && ArsenalMatchManager.activeMatch(attacker.server)
+                && ArsenalMatchManager.isParticipant(attacker)
+                && ArsenalMatchManager.isParticipant(victimPlayer)) return true;
+        if (victim instanceof ServerPlayer victimPlayer) {
+            boolean showdownPlayers = SecretShowdownManager.isParticipant(attacker)
+                    && SecretShowdownManager.isParticipant(victimPlayer);
+            boolean convoyPlayers = SecretConvoyManager.isParticipant(attacker)
+                    && SecretConvoyManager.isParticipant(victimPlayer);
+            if (showdownPlayers || convoyPlayers) return !attacker.isAlliedTo(victimPlayer);
+        }
+        return ServerConfig.DAMAGE_FEEDBACK_ENABLED.get() && !attacker.isAlliedTo(victim);
     }
 
     private static final class PendingTaczHit {

@@ -1,8 +1,8 @@
 package com.dousiyo.dpvptweaks.client.secretoperations;
 
-import com.dousiyo.dpvptweaks.network.OpenSecretOperationsAdminPacket;
-import com.dousiyo.dpvptweaks.network.SecretOperationsAdminActionPacket;
-import com.dousiyo.dpvptweaks.network.SecretOperationsNetwork;
+import com.dousiyo.dpvptweaks.network.secretoperations.OpenSecretOperationsAdminPacket;
+import com.dousiyo.dpvptweaks.network.secretoperations.SecretOperationsAdminActionPacket;
+import com.dousiyo.dpvptweaks.network.secretoperations.SecretOperationsNetwork;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
@@ -51,7 +51,7 @@ public final class SecretOperationsAdminScreen extends Screen {
     }
 
     private void send(SecretOperationsAdminActionPacket.Action action) {
-        SecretOperationsNetwork.CHANNEL.sendToServer(new SecretOperationsAdminActionPacket(mode, action, parse(duration, 10), parse(interval, 2)));
+        SecretOperationsNetwork.CHANNEL.sendToServer(new SecretOperationsAdminActionPacket(mode, action, parse(duration, 20), parse(interval, 2)));
     }
     private int parse(EditBox box, int fallback) { try { return Integer.parseInt(box.getValue()); } catch (NumberFormatException ignored) { return fallback; } }
 
